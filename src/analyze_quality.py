@@ -9,6 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "data" / "production_quality_data.csv"
 METRICS_PATH = PROJECT_ROOT / "outputs" / "model_metrics.json"
 FEATURE_IMPORTANCE_PATH = PROJECT_ROOT / "outputs" / "feature_importance.csv"
+SELECTED_THRESHOLD_PATH = PROJECT_ROOT / "outputs" / "selected_threshold.json"
 REPORT_PATH = PROJECT_ROOT / "outputs" / "quality_report.md"
 
 
@@ -20,7 +21,7 @@ def load_json(path: Path) -> dict:
         return json.load(file)
 
 
-def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame]:
+def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict]:
     if not DATA_PATH.exists():
         raise FileNotFoundError(
             f"Dataset not found at {DATA_PATH}. Run src/generate_data.py first."
@@ -31,11 +32,17 @@ def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame]:
             "Model outputs not found. Run src/train_model.py before generating the report."
         )
 
+    if not SELECTED_THRESHOLD_PATH.exists():
+        raise FileNotFoundError(
+            "Selected threshold output not found. Run src/tune_threshold.py before generating the report."
+        )
+
     df = pd.read_csv(DATA_PATH)
     metrics = load_json(METRICS_PATH)
     feature_importance = pd.read_csv(FEATURE_IMPORTANCE_PATH)
+    selected_threshold = load_json(SELECTED_THRESHOLD_PATH)
 
-    return df, metrics, feature_importance
+    return df, metrics, feature_importance, selected_threshold
 
 
 def percent(value: float) -> str:
@@ -64,7 +71,12 @@ def dataframe_to_markdown_table(df: pd.DataFrame) -> str:
     return df.to_markdown(index=False)
 
 
-def build_report(df: pd.DataFrame, metrics: dict, feature_importance: pd.DataFrame) -> str:
+def build_report(
+    df: pd.DataFrame,
+    metrics: dict,
+    feature_importance: pd.DataFrame,
+    selected_threshold: dict,
+) -> str:
     total_parts = len(df)
     overall_scrap_rate = df["scrap"].mean()
     scrap_parts = int(df["scrap"].sum())
@@ -85,6 +97,9 @@ def build_report(df: pd.DataFrame, metrics: dict, feature_importance: pd.DataFra
     feature_table["importance"] = feature_table["importance"].round(4)
 
     cm = metrics["confusion_matrix"]
+    default_recall = metrics["recall"]
+    tuned_recall = selected_threshold["recall"]
+    recall_improvement_pp = (tuned_recall - default_recall) * 100
 
     report = f"""# AI Production Quality Analysis Report
 
@@ -167,6 +182,23 @@ For a real production deployment, recall would likely be prioritized over raw ac
 
 ---
 
+## Threshold Tuning for Early-Warning Quality Monitoring
+
+The default classification threshold is **0.50**. For a manufacturing quality early-warning use case, the decision threshold was tuned to **{selected_threshold["selected_threshold"]:.2f}** to prioritize recall and reduce missed scrap cases.
+
+| Metric | Default Threshold 0.50 | Tuned Threshold {selected_threshold["selected_threshold"]:.2f} |
+|---|---:|---:|
+| Recall | {default_recall * 100:.2f}% | {tuned_recall * 100:.2f}% |
+| False negatives / missed scrap | {cm["false_negative"]} | {selected_threshold["false_negative"]} |
+| False positives / false alarms | {cm["false_positive"]} | {selected_threshold["false_positive"]} |
+
+The tuned threshold improves recall by **{recall_improvement_pp:.2f} percentage points** and reduces missed scrap cases from **{cm["false_negative"]}** to **{selected_threshold["false_negative"]}** in the test set. The trade-off is an increase in false alarms from **{cm["false_positive"]}** to **{selected_threshold["false_positive"]}**.
+
+This trade-off is acceptable for an early-warning quality monitoring scenario where missing defective parts may be more costly than additional inspection effort.
+
+
+---
+
 ## Key Process Drivers
 
 The following features had the highest importance in the Random Forest model:
@@ -232,7 +264,7 @@ Important limitations:
 
 Potential next steps:
 
-- Add threshold tuning to increase recall for early scrap warning.
+- Add cost-based threshold optimization using production-specific inspection and scrap costs.
 - Add probability-based risk levels: low, medium, high.
 - Include time-series sensor data for predictive maintenance analysis.
 - Add model explainability with SHAP values.
@@ -265,8 +297,8 @@ def save_report(report: str) -> None:
 
 
 def main() -> None:
-    df, metrics, feature_importance = load_inputs()
-    report = build_report(df, metrics, feature_importance)
+    df, metrics, feature_importance, selected_threshold = load_inputs()
+    report = build_report(df, metrics, feature_importance, selected_threshold)
     save_report(report)
 
     print("Quality report generated.")

@@ -45,6 +45,7 @@ If the preview image is not available, run the dashboard locally using the instr
 - Synthetic production data generation with realistic manufacturing risk patterns
 - Scrap prediction using a Random Forest classifier
 - New-part scrap risk prediction using the trained model
+- Classification threshold tuning for quality early-warning use cases
 - One-hot encoding for categorical production variables
 - Feature importance analysis for process driver identification
 - KPI dashboard for production quality monitoring
@@ -116,6 +117,18 @@ The model achieves high overall accuracy, but the F1 score is lower because scra
 
 For a real production use case, recall and threshold tuning would be important because missing defective parts may be more costly than generating false alarms.
 
+## Threshold Tuning
+
+The default model threshold is 0.50. For a manufacturing quality early-warning use case, the threshold was tuned to prioritize recall and reduce missed scrap cases.
+
+| Metric | Default Threshold 0.50 | Tuned Threshold 0.30 |
+|---|---:|---:|
+| Recall | 29.21% | 74.16% |
+| False negatives / missed scrap | 63 | 23 |
+| False positives / false alarms | 102 | 525 |
+
+The tuned threshold reduces missed scrap cases by 40 parts in the test set, but increases false alarms by 423. This trade-off is reasonable for an early-warning quality monitoring scenario where missing defective parts may be more costly than additional inspection effort.
+
 ## Key Findings
 
 The analysis identified the following quality patterns:
@@ -181,6 +194,8 @@ ai-production-quality-analyzer/
 ├── outputs/
 │   ├── feature_importance.csv
 │   ├── model_metrics.json
+│   ├── threshold_metrics.csv
+│   ├── selected_threshold.json
 │   ├── quality_report.md
 │   └── scrap_prediction_model.joblib
 │
@@ -241,24 +256,36 @@ python src/generate_data.py
 python src/train_model.py
 ```
 
-### 6. Export dashboard data
+### 6. Tune the classification threshold
+
+```bash
+python src/tune_threshold.py
+```
+
+### 7. Export dashboard data
 
 ```bash
 python src/export_dashboard_data.py
 ```
 
-### 7. Generate the quality report
+### 8. Generate the quality report
 
 ```bash
 python src/analyze_quality.py
 ```
 
-### 8. Predict scrap risk for a new part
+### 9. Predict scrap risk for a new part
 
 The project also includes a sample prediction script for a new production record:
 
 ```bash
 python src/predict_new_part.py
+```
+
+### 10. Start local dashboard server
+
+```bash
+python -m http.server 8000
 ```
 
 Example output:

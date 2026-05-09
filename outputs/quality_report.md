@@ -79,6 +79,23 @@ For a real production deployment, recall would likely be prioritized over raw ac
 
 ---
 
+## Threshold Tuning for Early-Warning Quality Monitoring
+
+The default classification threshold is **0.50**. For a manufacturing quality early-warning use case, the decision threshold was tuned to **0.30** to prioritize recall and reduce missed scrap cases.
+
+| Metric | Default Threshold 0.50 | Tuned Threshold 0.30 |
+|---|---:|---:|
+| Recall | 29.21% | 74.16% |
+| False negatives / missed scrap | 63 | 23 |
+| False positives / false alarms | 102 | 525 |
+
+The tuned threshold improves recall by **44.95 percentage points** and reduces missed scrap cases from **63** to **23** in the test set. The trade-off is an increase in false alarms from **102** to **525**.
+
+This trade-off is acceptable for an early-warning quality monitoring scenario where missing defective parts may be more costly than additional inspection effort.
+
+
+---
+
 ## Key Process Drivers
 
 The following features had the highest importance in the Random Forest model:
@@ -158,7 +175,7 @@ Important limitations:
 
 Potential next steps:
 
-- Add threshold tuning to increase recall for early scrap warning.
+- Add cost-based threshold optimization using production-specific inspection and scrap costs.
 - Add probability-based risk levels: low, medium, high.
 - Include time-series sensor data for predictive maintenance analysis.
 - Add model explainability with SHAP values.
