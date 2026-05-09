@@ -1,0 +1,148 @@
+{
+  "project": {
+    "title": "AI Production Quality Analyzer",
+    "subtitle": "Machine Learning Dashboard for Scrap Prediction and Process Improvement",
+    "dataset_type": "Synthetic manufacturing process dataset"
+  },
+  "kpis": {
+    "total_parts": 5000,
+    "overall_scrap_rate": 7.16,
+    "highest_risk_machine": "M2",
+    "model_f1_score": 0.2396,
+    "model_accuracy": 0.868,
+    "model_precision": 0.2031,
+    "model_recall": 0.2921
+  },
+  "charts": {
+    "scrap_rate_by_machine": [
+      {
+        "label": "M2",
+        "scrap_rate": 14.47
+      },
+      {
+        "label": "M4",
+        "scrap_rate": 5.0
+      },
+      {
+        "label": "M1",
+        "scrap_rate": 4.74
+      },
+      {
+        "label": "M3",
+        "scrap_rate": 4.36
+      }
+    ],
+    "scrap_rate_by_shift": [
+      {
+        "label": "night",
+        "scrap_rate": 9.82
+      },
+      {
+        "label": "late",
+        "scrap_rate": 6.88
+      },
+      {
+        "label": "early",
+        "scrap_rate": 5.82
+      }
+    ],
+    "scrap_rate_by_temperature_range": [
+      {
+        "label": "<180\u00b0C",
+        "scrap_rate": 5.51
+      },
+      {
+        "label": "180\u2013185\u00b0C",
+        "scrap_rate": 5.97
+      },
+      {
+        "label": "185\u2013190\u00b0C",
+        "scrap_rate": 6.98
+      },
+      {
+        "label": "190\u2013195\u00b0C",
+        "scrap_rate": 9.84
+      },
+      {
+        "label": ">195\u00b0C",
+        "scrap_rate": 18.08
+      }
+    ],
+    "risk_distribution": [
+      {
+        "label": "Low risk",
+        "count": 3343
+      },
+      {
+        "label": "Medium risk",
+        "count": 1034
+      },
+      {
+        "label": "High risk",
+        "count": 623
+      }
+    ],
+    "top_feature_importances": [
+      {
+        "feature": "vibration_mm_s",
+        "importance": 0.1586
+      },
+      {
+        "feature": "cycle_time_s",
+        "importance": 0.1371
+      },
+      {
+        "feature": "temperature_c",
+        "importance": 0.1303
+      },
+      {
+        "feature": "humidity_percent",
+        "importance": 0.108
+      },
+      {
+        "feature": "operator_experience_years",
+        "importance": 0.1041
+      },
+      {
+        "feature": "pressure_bar",
+        "importance": 0.0997
+      },
+      {
+        "feature": "machine_id_M2",
+        "importance": 0.0952
+      },
+      {
+        "feature": "material_batch_B4",
+        "importance": 0.0289
+      }
+    ]
+  },
+  "model": {
+    "metrics": {
+      "accuracy": 0.868,
+      "precision": 0.2031,
+      "recall": 0.2921,
+      "f1_score": 0.2396,
+      "confusion_matrix": {
+        "true_negative": 1059,
+        "false_positive": 102,
+        "false_negative": 63,
+        "true_positive": 26
+      }
+    },
+    "confusion_matrix": {
+      "true_negative": 1059,
+      "false_positive": 102,
+      "false_negative": 63,
+      "true_positive": 26
+    }
+  },
+  "recommendations": [
+    "Prioritize inspection and calibration of M2, which shows a scrap rate of 14.47% compared with the overall average of 7.16%.",
+    "Monitor machine vibration more closely, as vibration is one of the strongest drivers of predicted scrap risk and may indicate tool wear or unstable machine condition.",
+    "Investigate cycle time deviations above 50 seconds, as longer cycle times may indicate process instability or machine-related delays.",
+    "Review process temperature control, especially for runs above 190\u00b0C, where scrap risk increases.",
+    "Use additional process guidance or checklists for less experienced operators to reduce quality variation.",
+    "Use this dashboard as an early warning tool, but validate all findings with real production data before making operational changes."
+  ]
+}
