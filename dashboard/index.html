@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Production Quality Analyzer</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Manufacturing AI Dashboard</p>
+        <h1>AI Production Quality Analyzer</h1>
+        <p class="subtitle">
+          Machine Learning Dashboard for Scrap Prediction and Process Improvement
+        </p>
+      </div>
+
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        Synthetic Production Dataset
+      </div>
+    </header>
+
+    <main>
+      <section class="kpi-grid">
+        <article class="kpi-card">
+          <span class="kpi-label">Total Parts</span>
+          <strong id="totalParts">—</strong>
+          <p>Analyzed production records</p>
+        </article>
+
+        <article class="kpi-card danger">
+          <span class="kpi-label">Overall Scrap Rate</span>
+          <strong id="overallScrapRate">—</strong>
+          <p>Average defect rate across all machines</p>
+        </article>
+
+        <article class="kpi-card warning">
+          <span class="kpi-label">Highest Risk Machine</span>
+          <strong id="highestRiskMachine">—</strong>
+          <p>Machine with the highest observed scrap rate</p>
+        </article>
+
+        <article class="kpi-card">
+          <span class="kpi-label">Model F1 Score</span>
+          <strong id="modelF1Score">—</strong>
+          <p>Scrap prediction classification performance</p>
+        </article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="chart-card wide">
+          <div class="card-header">
+            <div>
+              <h2>Scrap Rate by Machine</h2>
+              <p>Identifies machine-level quality variation.</p>
+            </div>
+          </div>
+          <canvas id="scrapByMachineChart"></canvas>
+        </article>
+
+        <article class="chart-card">
+          <div class="card-header">
+            <div>
+              <h2>Scrap Rate by Shift</h2>
+              <p>Compares quality performance across shifts.</p>
+            </div>
+          </div>
+          <canvas id="scrapByShiftChart"></canvas>
+        </article>
+
+        <article class="chart-card">
+          <div class="card-header">
+            <div>
+              <h2>Temperature Range Risk</h2>
+              <p>Shows how thermal process windows affect scrap.</p>
+            </div>
+          </div>
+          <canvas id="temperatureRiskChart"></canvas>
+        </article>
+
+        <article class="chart-card wide">
+          <div class="card-header">
+            <div>
+              <h2>Top Feature Importances</h2>
+              <p>Random Forest drivers behind scrap prediction.</p>
+            </div>
+          </div>
+          <canvas id="featureImportanceChart"></canvas>
+        </article>
+      </section>
+
+      <section class="insight-grid">
+        <article class="insight-card">
+          <h2>Engineering Recommendations</h2>
+          <ul id="recommendationList"></ul>
+        </article>
+
+        <article class="insight-card">
+          <h2>Model Performance</h2>
+          <div class="metric-list">
+            <div>
+              <span>Accuracy</span>
+              <strong id="accuracy">—</strong>
+            </div>
+            <div>
+              <span>Precision</span>
+              <strong id="precision">—</strong>
+            </div>
+            <div>
+              <span>Recall</span>
+              <strong id="recall">—</strong>
+            </div>
+            <div>
+              <span>F1 Score</span>
+              <strong id="f1">—</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
