@@ -1,0 +1,17 @@
+{
+  "best_model_by_f1": {
+    "model": "Random Forest",
+    "accuracy": 0.868,
+    "precision": 0.2031,
+    "recall": 0.2921,
+    "f1_score": 0.2396
+  },
+  "selected_production_model": {
+    "model": "Random Forest",
+    "accuracy": 0.868,
+    "precision": 0.2031,
+    "recall": 0.2921,
+    "f1_score": 0.2396,
+    "selection_reason": "Random Forest is kept as the production model because it provides a strong balance of performance, robustness on tabular data, and interpretable feature importance values for engineering analysis."
+  }
+}
