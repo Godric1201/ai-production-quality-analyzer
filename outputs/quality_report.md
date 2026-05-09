@@ -1,98 +1,10 @@
-from pathlib import Path
-import json
-
-import pandas as pd
-
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-DATA_PATH = PROJECT_ROOT / "data" / "production_quality_data.csv"
-METRICS_PATH = PROJECT_ROOT / "outputs" / "model_metrics.json"
-FEATURE_IMPORTANCE_PATH = PROJECT_ROOT / "outputs" / "feature_importance.csv"
-REPORT_PATH = PROJECT_ROOT / "outputs" / "quality_report.md"
-
-
-def load_json(path: Path) -> dict:
-    if not path.exists():
-        raise FileNotFoundError(f"Required file not found: {path}")
-
-    with open(path, "r", encoding="utf-8") as file:
-        return json.load(file)
-
-
-def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame]:
-    if not DATA_PATH.exists():
-        raise FileNotFoundError(
-            f"Dataset not found at {DATA_PATH}. Run src/generate_data.py first."
-        )
-
-    if not METRICS_PATH.exists() or not FEATURE_IMPORTANCE_PATH.exists():
-        raise FileNotFoundError(
-            "Model outputs not found. Run src/train_model.py before generating the report."
-        )
-
-    df = pd.read_csv(DATA_PATH)
-    metrics = load_json(METRICS_PATH)
-    feature_importance = pd.read_csv(FEATURE_IMPORTANCE_PATH)
-
-    return df, metrics, feature_importance
-
-
-def percent(value: float) -> str:
-    return f"{value * 100:.2f}%"
-
-
-def get_machine_summary(df: pd.DataFrame) -> pd.DataFrame:
-    summary = (
-        df.groupby("machine_id")
-        .agg(
-            total_parts=("part_id", "count"),
-            scrap_parts=("scrap", "sum"),
-            scrap_rate=("scrap", "mean"),
-            avg_temperature_c=("temperature_c", "mean"),
-            avg_cycle_time_s=("cycle_time_s", "mean"),
-            avg_vibration_mm_s=("vibration_mm_s", "mean"),
-        )
-        .reset_index()
-        .sort_values("scrap_rate", ascending=False)
-    )
-
-    return summary
-
-
-def dataframe_to_markdown_table(df: pd.DataFrame) -> str:
-    return df.to_markdown(index=False)
-
-
-def build_report(df: pd.DataFrame, metrics: dict, feature_importance: pd.DataFrame) -> str:
-    total_parts = len(df)
-    overall_scrap_rate = df["scrap"].mean()
-    scrap_parts = int(df["scrap"].sum())
-
-    machine_summary = get_machine_summary(df)
-    highest_risk_machine = machine_summary.iloc[0]["machine_id"]
-    highest_machine_scrap_rate = machine_summary.iloc[0]["scrap_rate"]
-
-    top_features = feature_importance.head(8).copy()
-
-    machine_table = machine_summary.copy()
-    machine_table["scrap_rate"] = machine_table["scrap_rate"].apply(lambda x: f"{x * 100:.2f}%")
-    machine_table["avg_temperature_c"] = machine_table["avg_temperature_c"].round(1)
-    machine_table["avg_cycle_time_s"] = machine_table["avg_cycle_time_s"].round(1)
-    machine_table["avg_vibration_mm_s"] = machine_table["avg_vibration_mm_s"].round(2)
-
-    feature_table = top_features.copy()
-    feature_table["importance"] = feature_table["importance"].round(4)
-
-    cm = metrics["confusion_matrix"]
-
-    report = f"""# AI Production Quality Analysis Report
+# AI Production Quality Analysis Report
 
 ## Executive Summary
 
-This report analyzes a synthetic manufacturing quality dataset containing **{total_parts:,} production records**. The overall scrap rate is **{percent(overall_scrap_rate)}**, corresponding to **{scrap_parts} scrap parts**.
+This report analyzes a synthetic manufacturing quality dataset containing **5,000 production records**. The overall scrap rate is **7.16%**, corresponding to **358 scrap parts**.
 
-The analysis identifies **{highest_risk_machine}** as the highest-risk machine, with a scrap rate of **{percent(highest_machine_scrap_rate)}**. The machine learning model highlights vibration, cycle time, temperature, and machine-specific effects as relevant drivers of scrap risk.
+The analysis identifies **M2** as the highest-risk machine, with a scrap rate of **14.47%**. The machine learning model highlights vibration, cycle time, temperature, and machine-specific effects as relevant drivers of scrap risk.
 
 The project demonstrates how machine learning can support production quality monitoring, early risk detection, and structured process improvement in a manufacturing environment.
 
@@ -106,12 +18,12 @@ The dataset simulates manufacturing process data for a production quality contro
 
 | Metric | Value |
 |---|---:|
-| Total production records | {total_parts:,} |
-| Scrap parts | {scrap_parts} |
-| Overall scrap rate | {percent(overall_scrap_rate)} |
-| Number of machines | {df["machine_id"].nunique()} |
-| Number of shifts | {df["shift"].nunique()} |
-| Number of material batches | {df["material_batch"].nunique()} |
+| Total production records | 5,000 |
+| Scrap parts | 358 |
+| Overall scrap rate | 7.16% |
+| Number of machines | 4 |
+| Number of shifts | 3 |
+| Number of material batches | 5 |
 
 ### Input Features
 
@@ -145,19 +57,19 @@ Random Forest was selected because it performs well on tabular data, handles non
 
 | Metric | Value |
 |---|---:|
-| Accuracy | {metrics["accuracy"]:.3f} |
-| Precision | {metrics["precision"]:.3f} |
-| Recall | {metrics["recall"]:.3f} |
-| F1 Score | {metrics["f1_score"]:.3f} |
+| Accuracy | 0.868 |
+| Precision | 0.203 |
+| Recall | 0.292 |
+| F1 Score | 0.240 |
 
 ### Confusion Matrix
 
 | Prediction Result | Count |
 |---|---:|
-| True Negative | {cm["true_negative"]} |
-| False Positive | {cm["false_positive"]} |
-| False Negative | {cm["false_negative"]} |
-| True Positive | {cm["true_positive"]} |
+| True Negative | 1059 |
+| False Positive | 102 |
+| False Negative | 63 |
+| True Positive | 26 |
 
 ### Interpretation
 
@@ -171,7 +83,16 @@ For a real production deployment, recall would likely be prioritized over raw ac
 
 The following features had the highest importance in the Random Forest model:
 
-{dataframe_to_markdown_table(feature_table)}
+| feature                   |   importance |
+|:--------------------------|-------------:|
+| vibration_mm_s            |       0.1586 |
+| cycle_time_s              |       0.1371 |
+| temperature_c             |       0.1303 |
+| humidity_percent          |       0.108  |
+| operator_experience_years |       0.1041 |
+| pressure_bar              |       0.0997 |
+| machine_id_M2             |       0.0952 |
+| material_batch_B4         |       0.0289 |
 
 ### Engineering Interpretation
 
@@ -186,11 +107,16 @@ The strongest model drivers indicate that scrap risk is influenced by both proce
 
 ## Machine-Level Quality Analysis
 
-{dataframe_to_markdown_table(machine_table)}
+| machine_id   |   total_parts |   scrap_parts | scrap_rate   |   avg_temperature_c |   avg_cycle_time_s |   avg_vibration_mm_s |
+|:-------------|--------------:|--------------:|:-------------|--------------------:|-------------------:|---------------------:|
+| M2           |          1258 |           182 | 14.47%       |               187   |               48.3 |                 2.73 |
+| M4           |          1240 |            62 | 5.00%        |               184.3 |               46.6 |                 2.48 |
+| M1           |          1287 |            61 | 4.74%        |               184.3 |               46   |                 2.29 |
+| M3           |          1215 |            53 | 4.36%        |               183.4 |               46.1 |                 2.29 |
 
 ### Key Finding
 
-**{highest_risk_machine}** has the highest observed scrap rate at **{percent(highest_machine_scrap_rate)}**, compared with the overall average of **{percent(overall_scrap_rate)}**.
+**M2** has the highest observed scrap rate at **14.47%**, compared with the overall average of **7.16%**.
 
 This indicates that machine-level effects should be investigated before assuming the issue is only caused by material, operator, or shift-related variation.
 
@@ -198,7 +124,7 @@ This indicates that machine-level effects should be investigated before assuming
 
 ## Engineering Recommendations
 
-1. **Inspect and calibrate {highest_risk_machine}.**  
+1. **Inspect and calibrate M2.**  
    The scrap rate is significantly higher than the production average, suggesting potential calibration drift, machine wear, or unstable operating conditions.
 
 2. **Monitor vibration trends.**  
@@ -252,26 +178,3 @@ This project demonstrates an end-to-end AI workflow for manufacturing quality an
 - Automated engineering report generation
 
 The result is a compact portfolio project connecting **mechanical engineering**, **production quality**, **machine learning**, and **Industry 4.0**.
-"""
-
-    return report
-
-
-def save_report(report: str) -> None:
-    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(REPORT_PATH, "w", encoding="utf-8") as file:
-        file.write(report)
-
-
-def main() -> None:
-    df, metrics, feature_importance = load_inputs()
-    report = build_report(df, metrics, feature_importance)
-    save_report(report)
-
-    print("Quality report generated.")
-    print(f"Saved to: {REPORT_PATH}")
-
-
-if __name__ == "__main__":
-    main()
