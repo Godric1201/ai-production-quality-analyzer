@@ -18,12 +18,13 @@ This project addresses the following question:
 
 ## Project Output
 
-The project produces four main outputs:
+The project produces five main outputs:
 
 - A synthetic manufacturing quality dataset
 - A trained Random Forest scrap prediction model
 - A static HTML/CSS/JavaScript analytics dashboard
 - An automated Markdown quality analysis report
+- A sample prediction script for new production records
 
 ## Dashboard Preview
 
@@ -31,12 +32,19 @@ The dashboard includes KPI cards, machine-level scrap analysis, shift comparison
 
 ![Dashboard Preview](docs/dashboard-preview.png)
 
+## Live Dashboard
+
+The dashboard is deployed with GitHub Pages:
+
+https://godric1201.github.io/ai-production-quality-analyzer/dashboard/
+
 If the preview image is not available, run the dashboard locally using the instructions below.
 
 ## Key Features
 
 - Synthetic production data generation with realistic manufacturing risk patterns
 - Scrap prediction using a Random Forest classifier
+- New-part scrap risk prediction using the trained model
 - One-hot encoding for categorical production variables
 - Feature importance analysis for process driver identification
 - KPI dashboard for production quality monitoring
@@ -89,6 +97,7 @@ Pipeline steps:
 5. Evaluate model performance
 6. Export metrics, feature importances, and trained model
 7. Export dashboard-ready JSON data
+8. Predict scrap risk for a new production record
 
 Random Forest was selected because it performs well on tabular data, handles nonlinear feature interactions, and provides interpretable feature importance values.
 
@@ -114,6 +123,7 @@ The analysis identified the following quality patterns:
 - Overall scrap rate: 7.16%
 - Highest-risk machine: M2
 - M2 scrap rate: 14.47%
+- Sample high-risk part prediction: 75.85% scrap probability
 - Top model drivers include:
   - machine vibration
   - cycle time
@@ -155,13 +165,17 @@ ai-production-quality-analyzer/
 │   ├── generate_data.py
 │   ├── train_model.py
 │   ├── analyze_quality.py
-│   └── export_dashboard_data.py
+│   ├── export_dashboard_data.py
+│   └── predict_new_part.py
 │
 ├── dashboard/
 │   ├── index.html
 │   ├── style.css
 │   ├── app.js
 │   └── dashboard_data.json
+│
+├── docs/
+│   └── dashboard-preview.png
 │
 ├── outputs/
 │   ├── feature_importance.csv
@@ -171,3 +185,178 @@ ai-production-quality-analyzer/
 │
 ├── requirements.txt
 └── README.md
+```
+
+## How to Run Locally
+
+### 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd ai-production-quality-analyzer
+```
+
+### 2. Create a virtual environment
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+macOS / Linux:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Generate synthetic data
+
+```bash
+python src/generate_data.py
+```
+
+### 5. Train the model
+
+```bash
+python src/train_model.py
+```
+
+### 6. Export dashboard data
+
+```bash
+python src/export_dashboard_data.py
+```
+
+### 7. Generate the quality report
+
+```bash
+python src/analyze_quality.py
+```
+
+### 8. Predict scrap risk for a new part
+
+The project also includes a sample prediction script for a new production record:
+
+```bash
+python src/predict_new_part.py
+```
+
+Example output:
+
+```text
+New Part Scrap Risk Prediction
+====================================
+
+Prediction:
+  Scrap probability: 75.85%
+  Risk level: High
+
+Recommendations:
+  - Inspect M2 calibration and machine condition.
+  - Review process temperature control above 190°C.
+  - Investigate cycle time deviation above 50 seconds.
+  - Check vibration level for possible tool wear or mechanical instability.
+```
+
+### 9. Start local dashboard server
+
+```bash
+python -m http.server 8000
+```
+
+Open the dashboard in your browser:
+
+```text
+http://localhost:8000/dashboard/
+```
+
+## Outputs
+
+### Dashboard
+
+The static dashboard visualizes:
+
+- Total parts analyzed
+- Overall scrap rate
+- Highest-risk machine
+- Model F1 score
+- Scrap rate by machine
+- Scrap rate by shift
+- Scrap rate by temperature range
+- Feature importances
+- Engineering recommendations
+
+### Quality Report
+
+The automated report is generated at:
+
+```text
+outputs/quality_report.md
+```
+
+It includes:
+
+- Executive summary
+- Dataset overview
+- Model approach
+- Model performance
+- Key process drivers
+- Machine-level quality analysis
+- Engineering recommendations
+- Limitations
+- Future improvements
+
+### New Part Prediction
+
+The prediction script is located at:
+
+```text
+src/predict_new_part.py
+```
+
+It loads the trained Random Forest model and predicts the scrap probability for a sample production record. The script also assigns a risk level and provides rule-based engineering recommendations.
+
+## Limitations
+
+This project uses synthetic data. Although the dataset was designed to simulate realistic manufacturing quality patterns, it does not represent a real production line.
+
+Important limitations:
+
+- The model should not be used for real operational decisions without validation on real production data.
+- Feature importance values indicate model relevance, not physical causality.
+- The current workflow uses batch data rather than real-time sensor data.
+- The classification threshold has not yet been optimized for production-specific cost trade-offs.
+
+## Future Improvements
+
+Potential next steps:
+
+- Add probability-based risk levels: low, medium, high
+- Tune classification threshold to increase recall for scrap detection
+- Add SHAP-based model explainability
+- Allow command-line input for custom production records
+- Add a form-based prediction interface to the static dashboard
+- Deploy the dashboard through GitHub Pages
+- Validate the workflow with open or real manufacturing datasets
+- Extend the project toward predictive maintenance using time-series sensor data
+
+## Project Relevance
+
+This project connects several areas relevant to manufacturing digitalization:
+
+- Mechanical engineering
+- Production quality
+- Process optimization
+- Machine learning
+- Industrial AI
+- Industry 4.0
+- Data-driven decision support
