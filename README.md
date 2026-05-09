@@ -30,8 +30,13 @@ The project produces five main outputs:
 
 The dashboard includes KPI cards, machine-level scrap analysis, shift comparison, temperature risk analysis, feature importance visualization, and engineering recommendations.
 
-![Dashboard Preview](docs/dashboard-preview.png)
+### Dashboard Overview
 
+![Dashboard Overview](docs/dashboard-overview.png)
+
+### Prediction and Threshold Tuning
+
+![Prediction and Threshold Tuning](docs/dashboard-threshold.png)
 ## Live Dashboard
 
 The dashboard is deployed with GitHub Pages:
