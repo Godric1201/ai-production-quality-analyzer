@@ -10,6 +10,8 @@ DATA_PATH = PROJECT_ROOT / "data" / "production_quality_data.csv"
 METRICS_PATH = PROJECT_ROOT / "outputs" / "model_metrics.json"
 FEATURE_IMPORTANCE_PATH = PROJECT_ROOT / "outputs" / "feature_importance.csv"
 SELECTED_THRESHOLD_PATH = PROJECT_ROOT / "outputs" / "selected_threshold.json"
+MODEL_COMPARISON_PATH = PROJECT_ROOT / "outputs" / "model_comparison.csv"
+BEST_MODEL_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "best_model_summary.json"
 REPORT_PATH = PROJECT_ROOT / "outputs" / "quality_report.md"
 
 
@@ -21,7 +23,7 @@ def load_json(path: Path) -> dict:
         return json.load(file)
 
 
-def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict]:
+def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame, dict]:
     if not DATA_PATH.exists():
         raise FileNotFoundError(
             f"Dataset not found at {DATA_PATH}. Run src/generate_data.py first."
@@ -37,12 +39,26 @@ def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict]:
             "Selected threshold output not found. Run src/tune_threshold.py before generating the report."
         )
 
+    if not MODEL_COMPARISON_PATH.exists() or not BEST_MODEL_SUMMARY_PATH.exists():
+        raise FileNotFoundError(
+            "Model comparison outputs not found. Run src/compare_models.py before generating the report."
+        )
+
     df = pd.read_csv(DATA_PATH)
     metrics = load_json(METRICS_PATH)
     feature_importance = pd.read_csv(FEATURE_IMPORTANCE_PATH)
     selected_threshold = load_json(SELECTED_THRESHOLD_PATH)
+    model_comparison = pd.read_csv(MODEL_COMPARISON_PATH)
+    best_model_summary = load_json(BEST_MODEL_SUMMARY_PATH)
 
-    return df, metrics, feature_importance, selected_threshold
+    return (
+        df,
+        metrics,
+        feature_importance,
+        selected_threshold,
+        model_comparison,
+        best_model_summary,
+    )
 
 
 def percent(value: float) -> str:
@@ -76,6 +92,8 @@ def build_report(
     metrics: dict,
     feature_importance: pd.DataFrame,
     selected_threshold: dict,
+    model_comparison: pd.DataFrame,
+    best_model_summary: dict,
 ) -> str:
     total_parts = len(df)
     overall_scrap_rate = df["scrap"].mean()
@@ -95,6 +113,16 @@ def build_report(
 
     feature_table = top_features.copy()
     feature_table["importance"] = feature_table["importance"].round(4)
+
+    comparison_table = model_comparison[
+        ["model", "accuracy", "precision", "recall", "f1_score"]
+    ].copy()
+    comparison_table[["accuracy", "precision", "recall", "f1_score"]] = comparison_table[
+        ["accuracy", "precision", "recall", "f1_score"]
+    ].round(4)
+
+    best_model = best_model_summary["best_model_by_f1"]
+    selected_model = best_model_summary["selected_production_model"]
 
     cm = metrics["confusion_matrix"]
     default_recall = metrics["recall"]
@@ -153,6 +181,22 @@ The pipeline includes:
 6. Preparing dashboard-ready JSON data for visualization
 
 Random Forest was selected because it performs well on tabular data, handles nonlinear interactions, and provides interpretable feature importance values.
+
+---
+
+## Model Comparison
+
+Three classification models were evaluated on the same train-test split.
+
+{dataframe_to_markdown_table(comparison_table)}
+
+### Model Selection
+
+The best model by F1 score is **{best_model["model"]}** with an F1 score of **{best_model["f1_score"]:.3f}**.
+
+The selected production model is **{selected_model["model"]}**. Random Forest is used as the main production model because it provides a practical balance between predictive performance, robustness on tabular production data, and interpretable feature importance values for engineering analysis.
+
+Gradient Boosting achieved high accuracy but detected very few scrap cases, which makes it unsuitable for this imbalanced quality prediction scenario. Logistic Regression achieved higher recall but produced more false positives and a lower F1 score.
 
 ---
 
@@ -297,12 +341,24 @@ def save_report(report: str) -> None:
 
 
 def main() -> None:
-    df, metrics, feature_importance, selected_threshold = load_inputs()
-    report = build_report(df, metrics, feature_importance, selected_threshold)
-    save_report(report)
+    (
+        df,
+        metrics,
+        feature_importance,
+        selected_threshold,
+        model_comparison,
+        best_model_summary,
+    ) = load_inputs()
 
-    print("Quality report generated.")
-    print(f"Saved to: {REPORT_PATH}")
+    report = build_report(
+        df,
+        metrics,
+        feature_importance,
+        selected_threshold,
+        model_comparison,
+        best_model_summary,
+    )
+    save_report(report)
 
 
 if __name__ == "__main__":

@@ -49,6 +49,7 @@ If the preview image is not available, run the dashboard locally using the instr
 
 - Synthetic production data generation with realistic manufacturing risk patterns
 - Scrap prediction using a Random Forest classifier
+- Model comparison across Logistic Regression, Random Forest, and Gradient Boosting
 - New-part scrap risk prediction using the trained model
 - Classification threshold tuning for quality early-warning use cases
 - One-hot encoding for categorical production variables
@@ -99,11 +100,13 @@ Pipeline steps:
 1. Load production quality data
 2. Split features and target variable
 3. One-hot encode categorical features
-4. Train a Random Forest classifier
-5. Evaluate model performance
-6. Export metrics, feature importances, and trained model
-7. Export dashboard-ready JSON data
-8. Predict scrap risk for a new production record
+4. Compare multiple classification models
+5. Train the selected Random Forest classifier
+6. Evaluate model performance
+7. Tune the classification threshold for early-warning quality monitoring
+8. Export metrics, feature importances, and trained model
+9. Export dashboard-ready JSON data
+10. Predict scrap risk for a new production record
 
 Random Forest was selected because it performs well on tabular data, handles nonlinear feature interactions, and provides interpretable feature importance values.
 
@@ -121,6 +124,20 @@ Current model performance:
 The model achieves high overall accuracy, but the F1 score is lower because scrap cases are relatively rare compared with good parts. This is a typical issue in quality prediction problems with imbalanced production data.
 
 For a real production use case, recall and threshold tuning would be important because missing defective parts may be more costly than generating false alarms.
+
+## Model Comparison
+
+Three classification models were evaluated on the same train-test split:
+
+| Model | Accuracy | Precision | Recall | F1 Score |
+|---|---:|---:|---:|---:|
+| Random Forest | 0.868 | 0.203 | 0.292 | 0.240 |
+| Logistic Regression | 0.681 | 0.136 | 0.652 | 0.225 |
+| Gradient Boosting | 0.927 | 0.250 | 0.011 | 0.022 |
+
+Although Gradient Boosting achieved the highest accuracy, it detected almost no scrap cases and is therefore not suitable for this imbalanced quality prediction problem.
+
+Logistic Regression achieved higher recall, but with a lower F1 score and more false positives. Random Forest achieved the highest F1 score and was selected as the production model because it provides the best balance between performance, robustness on tabular data, and interpretable feature importance values.
 
 ## Threshold Tuning
 
@@ -182,6 +199,8 @@ ai-production-quality-analyzer/
 ├── src/
 │   ├── generate_data.py
 │   ├── train_model.py
+│   ├── compare_models.py
+│   ├── tune_threshold.py
 │   ├── analyze_quality.py
 │   ├── export_dashboard_data.py
 │   ├── predict_new_part.py
@@ -199,6 +218,8 @@ ai-production-quality-analyzer/
 ├── outputs/
 │   ├── feature_importance.csv
 │   ├── model_metrics.json
+│   ├── model_comparison.csv
+│   ├── best_model_summary.json
 │   ├── threshold_metrics.csv
 │   ├── selected_threshold.json
 │   ├── quality_report.md
@@ -291,6 +312,48 @@ python src/predict_new_part.py
 
 ```bash
 python -m http.server 8000
+```### 5. Train the model
+
+```bash
+python src/train_model.py
+```
+
+### 6. Compare classification models
+
+```bash
+python src/compare_models.py
+```
+
+### 7. Tune the classification threshold
+
+```bash
+python src/tune_threshold.py
+```
+
+### 8. Export dashboard data
+
+```bash
+python src/export_dashboard_data.py
+```
+
+### 9. Generate the quality report
+
+```bash
+python src/analyze_quality.py
+```
+
+### 10. Predict scrap risk for a new part
+
+The project also includes a sample prediction script for a new production record:
+
+```bash
+python src/predict_new_part.py
+```
+
+### 11. Start local dashboard server
+
+```bash
+python -m http.server 8000
 ```
 
 Example output:
@@ -367,6 +430,17 @@ src/predict_new_part.py
 ```
 
 It loads the trained Random Forest model and predicts the scrap probability for a sample production record. The script also assigns a risk level and provides rule-based engineering recommendations.
+
+### Model Comparison
+
+Model comparison outputs are generated at:
+
+```text
+outputs/model_comparison.csv
+outputs/best_model_summary.json
+```
+
+These files compare multiple classifiers and document why Random Forest was selected as the production model.
 
 ## Limitations
 

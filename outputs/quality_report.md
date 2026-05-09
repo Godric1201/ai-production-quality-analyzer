@@ -53,6 +53,26 @@ Random Forest was selected because it performs well on tabular data, handles non
 
 ---
 
+## Model Comparison
+
+Three classification models were evaluated on the same train-test split.
+
+| model               |   accuracy |   precision |   recall |   f1_score |
+|:--------------------|-----------:|------------:|---------:|-----------:|
+| Random Forest       |     0.868  |      0.2031 |   0.2921 |     0.2396 |
+| Logistic Regression |     0.6808 |      0.1362 |   0.6517 |     0.2252 |
+| Gradient Boosting   |     0.9272 |      0.25   |   0.0112 |     0.0215 |
+
+### Model Selection
+
+The best model by F1 score is **Random Forest** with an F1 score of **0.240**.
+
+The selected production model is **Random Forest**. Random Forest is used as the main production model because it provides a practical balance between predictive performance, robustness on tabular production data, and interpretable feature importance values for engineering analysis.
+
+Gradient Boosting achieved high accuracy but detected very few scrap cases, which makes it unsuitable for this imbalanced quality prediction scenario. Logistic Regression achieved higher recall but produced more false positives and a lower F1 score.
+
+---
+
 ## Model Performance
 
 | Metric | Value |
