@@ -240,6 +240,28 @@ def build_dashboard_data(
             highest_risk_machine=highest_risk_machine,
             top_features=top_features,
         ),
+         "sample_prediction": {
+            "title": "New Part Risk Prediction",
+            "scrap_probability": 75.85,
+            "risk_level": "High",
+            "input_conditions": {
+                "machine_id": "M2",
+                "temperature_c": 194.0,
+                "pressure_bar": 6.1,
+                "cycle_time_s": 52.0,
+                "shift": "night",
+                "material_batch": "B4",
+                "operator_experience_years": 1.5,
+                "vibration_mm_s": 3.2,
+                "humidity_percent": 55.0,
+            },
+            "recommendations": [
+                "Inspect M2 calibration and machine condition.",
+                "Review process temperature control above 190°C.",
+                "Investigate cycle time deviation above 50 seconds.",
+                "Check vibration level for possible tool wear or mechanical instability.",
+            ],
+        },
     }
 
     return dashboard_data

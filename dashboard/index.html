@@ -95,36 +95,53 @@
         </article>
       </section>
 
-      <section class="insight-grid">
-        <article class="insight-card">
-          <h2>Engineering Recommendations</h2>
-          <ul id="recommendationList"></ul>
-        </article>
+        <section class="insight-grid">
+  <article class="insight-card recommendations-card">
+    <h2>Engineering Recommendations</h2>
+    <ul id="recommendationList"></ul>
+  </article>
 
-        <article class="insight-card">
-          <h2>Model Performance</h2>
-          <div class="metric-list">
-            <div>
-              <span>Accuracy</span>
-              <strong id="accuracy">—</strong>
-            </div>
-            <div>
-              <span>Precision</span>
-              <strong id="precision">—</strong>
-            </div>
-            <div>
-              <span>Recall</span>
-              <strong id="recall">—</strong>
-            </div>
-            <div>
-              <span>F1 Score</span>
-              <strong id="f1">—</strong>
-            </div>
-          </div>
-        </article>
-      </section>
-    </main>
-  </div>
+  <article class="insight-card prediction-card">
+    <h2>New Part Risk Prediction</h2>
+    <p class="prediction-subtitle">
+      Example prediction for a high-risk production condition.
+    </p>
+
+    <div class="prediction-score">
+      <span>Scrap Probability</span>
+      <strong id="sampleScrapProbability">—</strong>
+    </div>
+
+    <div class="risk-badge" id="sampleRiskLevel">—</div>
+
+    <div class="condition-grid" id="sampleInputConditions"></div>
+
+    <h3>Prediction Recommendations</h3>
+    <ul id="samplePredictionRecommendations" class="compact-list"></ul>
+  </article>
+
+  <article class="insight-card model-card">
+    <h2>Model Performance</h2>
+    <div class="metric-list horizontal-metrics">
+      <div>
+        <span>Accuracy</span>
+        <strong id="accuracy">—</strong>
+      </div>
+      <div>
+        <span>Precision</span>
+        <strong id="precision">—</strong>
+      </div>
+      <div>
+        <span>Recall</span>
+        <strong id="recall">—</strong>
+      </div>
+      <div>
+        <span>F1 Score</span>
+        <strong id="f1">—</strong>
+      </div>
+    </div>
+  </article>
+</section>
 
   <script src="app.js"></script>
 </body>

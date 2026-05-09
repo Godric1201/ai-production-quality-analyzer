@@ -136,6 +136,48 @@ function renderRecommendations(recommendations) {
   });
 }
 
+function formatConditionLabel(key) {
+  return key
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function renderSamplePrediction(samplePrediction) {
+  setText(
+    "sampleScrapProbability",
+    `${Number(samplePrediction.scrap_probability).toFixed(2)}%`
+  );
+
+  setText("sampleRiskLevel", `${samplePrediction.risk_level} Risk`);
+
+  const conditionGrid = document.getElementById("sampleInputConditions");
+  conditionGrid.innerHTML = "";
+
+  Object.entries(samplePrediction.input_conditions).forEach(([key, value]) => {
+    const item = document.createElement("div");
+    item.className = "condition-item";
+
+    const label = document.createElement("span");
+    label.textContent = formatConditionLabel(key);
+
+    const strong = document.createElement("strong");
+    strong.textContent = value;
+
+    item.appendChild(label);
+    item.appendChild(strong);
+    conditionGrid.appendChild(item);
+  });
+
+  const recommendationList = document.getElementById("samplePredictionRecommendations");
+  recommendationList.innerHTML = "";
+
+  samplePrediction.recommendations.forEach((recommendation) => {
+    const li = document.createElement("li");
+    li.textContent = recommendation;
+    recommendationList.appendChild(li);
+  });
+}
+
 function renderCharts(charts) {
   createBarChart(
     "scrapByMachineChart",
@@ -179,9 +221,10 @@ async function loadDashboard() {
 
     const data = await response.json();
 
-    renderKpis(data.kpis);
+        renderKpis(data.kpis);
     renderCharts(data.charts);
     renderRecommendations(data.recommendations);
+    renderSamplePrediction(data.sample_prediction);
   } catch (error) {
     console.error(error);
     document.body.innerHTML = `

@@ -144,5 +144,27 @@
     "Review process temperature control, especially for runs above 190\u00b0C, where scrap risk increases.",
     "Use additional process guidance or checklists for less experienced operators to reduce quality variation.",
     "Use this dashboard as an early warning tool, but validate all findings with real production data before making operational changes."
-  ]
+  ],
+  "sample_prediction": {
+    "title": "New Part Risk Prediction",
+    "scrap_probability": 75.85,
+    "risk_level": "High",
+    "input_conditions": {
+      "machine_id": "M2",
+      "temperature_c": 194.0,
+      "pressure_bar": 6.1,
+      "cycle_time_s": 52.0,
+      "shift": "night",
+      "material_batch": "B4",
+      "operator_experience_years": 1.5,
+      "vibration_mm_s": 3.2,
+      "humidity_percent": 55.0
+    },
+    "recommendations": [
+      "Inspect M2 calibration and machine condition.",
+      "Review process temperature control above 190\u00b0C.",
+      "Investigate cycle time deviation above 50 seconds.",
+      "Check vibration level for possible tool wear or mechanical instability."
+    ]
+  }
 }
