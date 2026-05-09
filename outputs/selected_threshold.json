@@ -1,0 +1,12 @@
+{
+  "selected_threshold": 0.3,
+  "accuracy": 0.5616,
+  "precision": 0.1117,
+  "recall": 0.7416,
+  "f1_score": 0.1941,
+  "true_negative": 636,
+  "false_positive": 525,
+  "false_negative": 23,
+  "true_positive": 66,
+  "selection_reason": "Selected because it reaches the recall target for an early-warning quality use case while maintaining the strongest F1 score among candidates."
+}
