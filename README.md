@@ -52,6 +52,7 @@ If the preview image is not available, run the dashboard locally using the instr
 - Model comparison across Logistic Regression, Random Forest, and Gradient Boosting
 - New-part scrap risk prediction using the trained model
 - Classification threshold tuning for quality early-warning use cases
+- Cost-based threshold optimization using missed scrap and false alarm assumptions
 - One-hot encoding for categorical production variables
 - Feature importance analysis for process driver identification
 - KPI dashboard for production quality monitoring
@@ -151,6 +152,27 @@ The default model threshold is 0.50. For a manufacturing quality early-warning u
 
 The tuned threshold reduces missed scrap cases by 40 parts in the test set, but increases false alarms by 423. This trade-off is reasonable for an early-warning quality monitoring scenario where missing defective parts may be more costly than additional inspection effort.
 
+## Cost-Based Threshold Optimization
+
+A cost-based threshold analysis was added to translate model performance into an operational manufacturing decision.
+
+The assumed costs are illustrative:
+
+| Cost Type | Assumed Cost |
+|---|---:|
+| Missed scrap / false negative | 100 EUR |
+| False alarm / additional inspection | 10 EUR |
+
+Under these assumptions, the cost-optimized threshold is **0.40**.
+
+| Threshold Strategy | Threshold | Total Estimated Cost | Recall |
+|---|---:|---:|---:|
+| Default threshold | 0.50 | 7,320 EUR | 29.21% |
+| Recall-tuned threshold | 0.30 | 7,550 EUR | 74.16% |
+| Cost-optimized threshold | 0.40 | 6,850 EUR | 48.31% |
+
+The cost-optimized threshold reduces the estimated operational cost by **470 EUR** compared with the default threshold. This demonstrates how model decisions can be evaluated not only by classification metrics, but also by production-specific business and quality costs.
+
 ## Key Findings
 
 The analysis identified the following quality patterns:
@@ -201,6 +223,7 @@ ai-production-quality-analyzer/
 │   ├── train_model.py
 │   ├── compare_models.py
 │   ├── tune_threshold.py
+│   ├── optimize_threshold_cost.py
 │   ├── analyze_quality.py
 │   ├── export_dashboard_data.py
 │   ├── predict_new_part.py
@@ -222,6 +245,8 @@ ai-production-quality-analyzer/
 │   ├── best_model_summary.json
 │   ├── threshold_metrics.csv
 │   ├── selected_threshold.json
+│   ├── threshold_cost_analysis.csv
+│   ├── cost_optimized_threshold.json
 │   ├── quality_report.md
 │   └── scrap_prediction_model.joblib
 │
@@ -330,32 +355,35 @@ python src/compare_models.py
 python src/tune_threshold.py
 ```
 
-### 8. Export dashboard data
+### 8. Optimize threshold by operational cost
+
+```bash
+python src/optimize_threshold_cost.py
+```
+
+### 9. Export dashboard data
 
 ```bash
 python src/export_dashboard_data.py
 ```
 
-### 9. Generate the quality report
+### 10. Generate the quality report
 
 ```bash
 python src/analyze_quality.py
 ```
 
-### 10. Predict scrap risk for a new part
-
-The project also includes a sample prediction script for a new production record:
+### 11. Predict scrap risk for a new part
 
 ```bash
 python src/predict_new_part.py
 ```
 
-### 11. Start local dashboard server
+### 12. Start local dashboard server
 
 ```bash
 python -m http.server 8000
 ```
-
 Example output:
 
 ```text
@@ -465,6 +493,17 @@ Potential next steps:
 - Deploy the dashboard through GitHub Pages
 - Validate the workflow with open or real manufacturing datasets
 - Extend the project toward predictive maintenance using time-series sensor data
+
+### Cost-Based Threshold Optimization
+
+Cost optimization outputs are generated at:
+
+```text
+outputs/threshold_cost_analysis.csv
+outputs/cost_optimized_threshold.json
+```
+
+These files estimate the operational trade-off between missed scrap cost and false alarm inspection cost across multiple classification thresholds.
 
 ## Project Relevance
 

@@ -6,7 +6,7 @@ This report analyzes a synthetic manufacturing quality dataset containing **5,00
 
 The analysis identifies **M2** as the highest-risk machine, with a scrap rate of **14.47%**. The machine learning model highlights vibration, cycle time, temperature, and machine-specific effects as relevant drivers of scrap risk.
 
-The project demonstrates how machine learning can support production quality monitoring, early risk detection, and structured process improvement in a manufacturing environment.
+The project demonstrates how machine learning can support production quality monitoring, early risk detection, threshold optimization, cost-aware decision-making, and structured process improvement in a manufacturing environment.
 
 ---
 
@@ -44,10 +44,13 @@ The pipeline includes:
 
 1. Loading the production quality dataset
 2. One-hot encoding categorical variables
-3. Training a Random Forest classifier
-4. Evaluating classification performance
-5. Exporting model metrics and feature importance values
-6. Preparing dashboard-ready JSON data for visualization
+3. Comparing multiple classification models
+4. Training the selected Random Forest classifier
+5. Evaluating classification performance
+6. Tuning the classification threshold for early-warning quality monitoring
+7. Optimizing the threshold using operational cost assumptions
+8. Exporting model metrics and feature importance values
+9. Preparing dashboard-ready JSON data for visualization
 
 Random Forest was selected because it performs well on tabular data, handles nonlinear interactions, and provides interpretable feature importance values.
 
@@ -113,6 +116,30 @@ The tuned threshold improves recall by **44.95 percentage points** and reduces m
 
 This trade-off is acceptable for an early-warning quality monitoring scenario where missing defective parts may be more costly than additional inspection effort.
 
+---
+
+## Cost-Based Threshold Optimization
+
+A cost-based threshold analysis was added to translate classification performance into an operational manufacturing decision.
+
+The assumed costs are illustrative and can be adjusted for a real production environment:
+
+| Cost Type | Assumed Cost |
+|---|---:|
+| Missed scrap / false negative | 100 EUR |
+| False alarm / additional inspection | 10 EUR |
+
+Under these assumptions, the cost-optimized threshold is **0.40**.
+
+| Threshold Strategy | Threshold | Total Estimated Cost | Recall | False Negatives | False Positives |
+|---|---:|---:|---:|---:|---:|
+| Default threshold | 0.50 | 7320 EUR | 29.21% | 63 | 102 |
+| Recall-tuned threshold | 0.30 | 7550 EUR | 74.16% | 23 | 525 |
+| Cost-optimized threshold | 0.40 | 6850 EUR | 48.31% | 46 | 225 |
+
+The cost-optimized threshold reduces the estimated operational cost by **470 EUR** compared with the default threshold.
+
+This demonstrates that classification thresholds should not be selected only by generic ML metrics. In a manufacturing quality context, the decision threshold should reflect the operational cost of missed scrap and additional inspection effort.
 
 ---
 
@@ -187,7 +214,8 @@ Important limitations:
 - The model should not be used for real production decisions without validation on actual shop-floor data.
 - Feature importance values are model-based indicators, not proof of physical causality.
 - The current model uses static batch data and does not include real-time sensor streaming.
-- The classification threshold has not yet been optimized for production-specific cost trade-offs.
+- Cost assumptions are illustrative and should be adjusted to match real inspection, scrap, and rework costs.
+- Classification thresholds should be validated with production-specific quality and cost requirements.
 
 ---
 
@@ -195,12 +223,12 @@ Important limitations:
 
 Potential next steps:
 
-- Add cost-based threshold optimization using production-specific inspection and scrap costs.
+- Add production-specific cost inputs for configurable threshold optimization.
 - Add probability-based risk levels: low, medium, high.
 - Include time-series sensor data for predictive maintenance analysis.
 - Add model explainability with SHAP values.
-- Deploy the static dashboard through GitHub Pages.
 - Validate the workflow with real or open manufacturing datasets.
+- Extend the dashboard with a user-adjustable threshold and cost scenario panel.
 
 ---
 
@@ -210,6 +238,9 @@ This project demonstrates an end-to-end AI workflow for manufacturing quality an
 
 - Synthetic production data generation
 - Machine learning-based scrap prediction
+- Model comparison and selection
+- Threshold tuning for early-warning quality monitoring
+- Cost-based threshold optimization
 - Feature importance analysis
 - Static dashboard visualization
 - Automated engineering report generation

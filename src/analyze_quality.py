@@ -12,6 +12,7 @@ FEATURE_IMPORTANCE_PATH = PROJECT_ROOT / "outputs" / "feature_importance.csv"
 SELECTED_THRESHOLD_PATH = PROJECT_ROOT / "outputs" / "selected_threshold.json"
 MODEL_COMPARISON_PATH = PROJECT_ROOT / "outputs" / "model_comparison.csv"
 BEST_MODEL_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "best_model_summary.json"
+COST_OPTIMIZATION_PATH = PROJECT_ROOT / "outputs" / "cost_optimized_threshold.json"
 REPORT_PATH = PROJECT_ROOT / "outputs" / "quality_report.md"
 
 
@@ -23,7 +24,7 @@ def load_json(path: Path) -> dict:
         return json.load(file)
 
 
-def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame, dict]:
+def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame, dict, dict]:
     if not DATA_PATH.exists():
         raise FileNotFoundError(
             f"Dataset not found at {DATA_PATH}. Run src/generate_data.py first."
@@ -44,12 +45,18 @@ def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame,
             "Model comparison outputs not found. Run src/compare_models.py before generating the report."
         )
 
+    if not COST_OPTIMIZATION_PATH.exists():
+        raise FileNotFoundError(
+            "Cost optimization output not found. Run src/optimize_threshold_cost.py before generating the report."
+        )
+
     df = pd.read_csv(DATA_PATH)
     metrics = load_json(METRICS_PATH)
     feature_importance = pd.read_csv(FEATURE_IMPORTANCE_PATH)
     selected_threshold = load_json(SELECTED_THRESHOLD_PATH)
     model_comparison = pd.read_csv(MODEL_COMPARISON_PATH)
     best_model_summary = load_json(BEST_MODEL_SUMMARY_PATH)
+    cost_optimization = load_json(COST_OPTIMIZATION_PATH)
 
     return (
         df,
@@ -58,6 +65,7 @@ def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame,
         selected_threshold,
         model_comparison,
         best_model_summary,
+        cost_optimization,
     )
 
 
@@ -94,6 +102,7 @@ def build_report(
     selected_threshold: dict,
     model_comparison: pd.DataFrame,
     best_model_summary: dict,
+    cost_optimization: dict,
 ) -> str:
     total_parts = len(df)
     overall_scrap_rate = df["scrap"].mean()
@@ -124,6 +133,10 @@ def build_report(
     best_model = best_model_summary["best_model_by_f1"]
     selected_model = best_model_summary["selected_production_model"]
 
+    cost_assumptions = cost_optimization["cost_assumptions"]
+    cost_optimized = cost_optimization["cost_optimized_threshold"]
+    cost_comparison = cost_optimization["comparison"]
+
     cm = metrics["confusion_matrix"]
     default_recall = metrics["recall"]
     tuned_recall = selected_threshold["recall"]
@@ -137,7 +150,7 @@ This report analyzes a synthetic manufacturing quality dataset containing **{tot
 
 The analysis identifies **{highest_risk_machine}** as the highest-risk machine, with a scrap rate of **{percent(highest_machine_scrap_rate)}**. The machine learning model highlights vibration, cycle time, temperature, and machine-specific effects as relevant drivers of scrap risk.
 
-The project demonstrates how machine learning can support production quality monitoring, early risk detection, and structured process improvement in a manufacturing environment.
+The project demonstrates how machine learning can support production quality monitoring, early risk detection, threshold optimization, cost-aware decision-making, and structured process improvement in a manufacturing environment.
 
 ---
 
@@ -175,10 +188,13 @@ The pipeline includes:
 
 1. Loading the production quality dataset
 2. One-hot encoding categorical variables
-3. Training a Random Forest classifier
-4. Evaluating classification performance
-5. Exporting model metrics and feature importance values
-6. Preparing dashboard-ready JSON data for visualization
+3. Comparing multiple classification models
+4. Training the selected Random Forest classifier
+5. Evaluating classification performance
+6. Tuning the classification threshold for early-warning quality monitoring
+7. Optimizing the threshold using operational cost assumptions
+8. Exporting model metrics and feature importance values
+9. Preparing dashboard-ready JSON data for visualization
 
 Random Forest was selected because it performs well on tabular data, handles nonlinear interactions, and provides interpretable feature importance values.
 
@@ -240,6 +256,30 @@ The tuned threshold improves recall by **{recall_improvement_pp:.2f} percentage 
 
 This trade-off is acceptable for an early-warning quality monitoring scenario where missing defective parts may be more costly than additional inspection effort.
 
+---
+
+## Cost-Based Threshold Optimization
+
+A cost-based threshold analysis was added to translate classification performance into an operational manufacturing decision.
+
+The assumed costs are illustrative and can be adjusted for a real production environment:
+
+| Cost Type | Assumed Cost |
+|---|---:|
+| Missed scrap / false negative | {cost_assumptions["missed_scrap_cost"]:.0f} {cost_assumptions["currency"]} |
+| False alarm / additional inspection | {cost_assumptions["false_alarm_cost"]:.0f} {cost_assumptions["currency"]} |
+
+Under these assumptions, the cost-optimized threshold is **{cost_optimized["threshold"]:.2f}**.
+
+| Threshold Strategy | Threshold | Total Estimated Cost | Recall | False Negatives | False Positives |
+|---|---:|---:|---:|---:|---:|
+| Default threshold | 0.50 | {cost_comparison["default_threshold_0_50"]["total_cost"]:.0f} {cost_assumptions["currency"]} | {cost_comparison["default_threshold_0_50"]["recall"] * 100:.2f}% | {cost_comparison["default_threshold_0_50"]["false_negative"]} | {cost_comparison["default_threshold_0_50"]["false_positive"]} |
+| Recall-tuned threshold | 0.30 | {cost_comparison["recall_tuned_threshold_0_30"]["total_cost"]:.0f} {cost_assumptions["currency"]} | {cost_comparison["recall_tuned_threshold_0_30"]["recall"] * 100:.2f}% | {cost_comparison["recall_tuned_threshold_0_30"]["false_negative"]} | {cost_comparison["recall_tuned_threshold_0_30"]["false_positive"]} |
+| Cost-optimized threshold | {cost_optimized["threshold"]:.2f} | {cost_optimized["total_cost"]:.0f} {cost_assumptions["currency"]} | {cost_optimized["recall"] * 100:.2f}% | {cost_optimized["false_negative"]} | {cost_optimized["false_positive"]} |
+
+The cost-optimized threshold reduces the estimated operational cost by **{cost_comparison["cost_savings_vs_default"]:.0f} {cost_assumptions["currency"]}** compared with the default threshold.
+
+This demonstrates that classification thresholds should not be selected only by generic ML metrics. In a manufacturing quality context, the decision threshold should reflect the operational cost of missed scrap and additional inspection effort.
 
 ---
 
@@ -300,7 +340,8 @@ Important limitations:
 - The model should not be used for real production decisions without validation on actual shop-floor data.
 - Feature importance values are model-based indicators, not proof of physical causality.
 - The current model uses static batch data and does not include real-time sensor streaming.
-- The classification threshold has not yet been optimized for production-specific cost trade-offs.
+- Cost assumptions are illustrative and should be adjusted to match real inspection, scrap, and rework costs.
+- Classification thresholds should be validated with production-specific quality and cost requirements.
 
 ---
 
@@ -308,12 +349,12 @@ Important limitations:
 
 Potential next steps:
 
-- Add cost-based threshold optimization using production-specific inspection and scrap costs.
+- Add production-specific cost inputs for configurable threshold optimization.
 - Add probability-based risk levels: low, medium, high.
 - Include time-series sensor data for predictive maintenance analysis.
 - Add model explainability with SHAP values.
-- Deploy the static dashboard through GitHub Pages.
 - Validate the workflow with real or open manufacturing datasets.
+- Extend the dashboard with a user-adjustable threshold and cost scenario panel.
 
 ---
 
@@ -323,6 +364,9 @@ This project demonstrates an end-to-end AI workflow for manufacturing quality an
 
 - Synthetic production data generation
 - Machine learning-based scrap prediction
+- Model comparison and selection
+- Threshold tuning for early-warning quality monitoring
+- Cost-based threshold optimization
 - Feature importance analysis
 - Static dashboard visualization
 - Automated engineering report generation
@@ -348,6 +392,7 @@ def main() -> None:
         selected_threshold,
         model_comparison,
         best_model_summary,
+        cost_optimization,
     ) = load_inputs()
 
     report = build_report(
@@ -357,8 +402,13 @@ def main() -> None:
         selected_threshold,
         model_comparison,
         best_model_summary,
+        cost_optimization,
     )
+
     save_report(report)
+
+    print("Quality report generated.")
+    print(f"Saved to: {REPORT_PATH}")
 
 
 if __name__ == "__main__":
