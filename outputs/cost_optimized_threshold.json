@@ -1,0 +1,35 @@
+{
+  "cost_assumptions": {
+    "missed_scrap_cost": 100.0,
+    "false_alarm_cost": 10.0,
+    "currency": "EUR",
+    "note": "Illustrative cost values for a manufacturing quality early-warning scenario."
+  },
+  "cost_optimized_threshold": {
+    "threshold": 0.4,
+    "total_cost": 6850.0,
+    "missed_scrap_cost": 4600.0,
+    "false_alarm_cost": 2250.0,
+    "false_negative": 46,
+    "false_positive": 225,
+    "recall": 0.4831,
+    "precision": 0.1604,
+    "f1_score": 0.2409
+  },
+  "comparison": {
+    "default_threshold_0_50": {
+      "total_cost": 7320.0,
+      "false_negative": 63,
+      "false_positive": 102,
+      "recall": 0.2921
+    },
+    "recall_tuned_threshold_0_30": {
+      "total_cost": 7550.0,
+      "false_negative": 23,
+      "false_positive": 525,
+      "recall": 0.7416
+    },
+    "cost_savings_vs_default": 470.0
+  },
+  "selection_reason": "The cost-optimized threshold minimizes the estimated total cost from missed scrap and additional false alarms under the defined cost assumptions."
+}

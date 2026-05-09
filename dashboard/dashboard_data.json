@@ -207,6 +207,20 @@
           "false_negative": 63
         }
       ]
+    },
+    "cost_optimization": {
+      "missed_scrap_cost": 100.0,
+      "false_alarm_cost": 10.0,
+      "currency": "EUR",
+      "cost_optimized_threshold": 0.4,
+      "optimized_total_cost": 6850.0,
+      "optimized_recall": 0.4831,
+      "optimized_false_negative": 46,
+      "optimized_false_positive": 225,
+      "default_total_cost": 7320.0,
+      "recall_tuned_total_cost": 7550.0,
+      "cost_savings_vs_default": 470.0,
+      "selection_reason": "The cost-optimized threshold minimizes the estimated total cost from missed scrap and additional false alarms under the defined cost assumptions."
     }
   },
   "recommendations": [

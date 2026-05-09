@@ -11,6 +11,7 @@ METRICS_PATH = PROJECT_ROOT / "outputs" / "model_metrics.json"
 FEATURE_IMPORTANCE_PATH = PROJECT_ROOT / "outputs" / "feature_importance.csv"
 SELECTED_THRESHOLD_PATH = PROJECT_ROOT / "outputs" / "selected_threshold.json"
 THRESHOLD_METRICS_PATH = PROJECT_ROOT / "outputs" / "threshold_metrics.csv"
+COST_OPTIMIZATION_PATH = PROJECT_ROOT / "outputs" / "cost_optimized_threshold.json"
 DASHBOARD_DATA_PATH = PROJECT_ROOT / "dashboard" / "dashboard_data.json"
 
 def load_json(path: Path) -> dict:
@@ -22,7 +23,7 @@ def load_json(path: Path) -> dict:
         return json.load(file)
 
 
-def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame]:
+def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame, dict]:
     """Load all inputs required for dashboard export."""
     if not DATA_PATH.exists():
         raise FileNotFoundError(
@@ -39,14 +40,19 @@ def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame]
         raise FileNotFoundError(
             "Threshold tuning outputs not found. Run src/tune_threshold.py first."
         )
+    if not COST_OPTIMIZATION_PATH.exists():
+        raise FileNotFoundError(
+            "Cost optimization output not found. Run src/optimize_threshold_cost.py first."
+        )
 
     df = pd.read_csv(DATA_PATH)
     metrics = load_json(METRICS_PATH)
     feature_importance = pd.read_csv(FEATURE_IMPORTANCE_PATH)
     selected_threshold = load_json(SELECTED_THRESHOLD_PATH)
     threshold_metrics = pd.read_csv(THRESHOLD_METRICS_PATH)
+    cost_optimization = load_json(COST_OPTIMIZATION_PATH)
 
-    return df, metrics, feature_importance, selected_threshold, threshold_metrics
+    return df, metrics, feature_importance, selected_threshold, threshold_metrics, cost_optimization
 
 
 def format_percent(value: float) -> float:
@@ -250,12 +256,35 @@ def build_threshold_summary(
         ],
     }
 
+def build_cost_optimization_summary(cost_optimization: dict) -> dict:
+    """Build cost-based threshold optimization summary for dashboard visualization."""
+    assumptions = cost_optimization["cost_assumptions"]
+    optimized = cost_optimization["cost_optimized_threshold"]
+    comparison = cost_optimization["comparison"]
+
+    return {
+        "missed_scrap_cost": assumptions["missed_scrap_cost"],
+        "false_alarm_cost": assumptions["false_alarm_cost"],
+        "currency": assumptions["currency"],
+        "cost_optimized_threshold": optimized["threshold"],
+        "optimized_total_cost": optimized["total_cost"],
+        "optimized_recall": optimized["recall"],
+        "optimized_false_negative": optimized["false_negative"],
+        "optimized_false_positive": optimized["false_positive"],
+        "default_total_cost": comparison["default_threshold_0_50"]["total_cost"],
+        "recall_tuned_total_cost": comparison["recall_tuned_threshold_0_30"]["total_cost"],
+        "cost_savings_vs_default": comparison["cost_savings_vs_default"],
+        "selection_reason": cost_optimization["selection_reason"],
+    }
+
+
 def build_dashboard_data(
     df: pd.DataFrame,
     metrics: dict,
     feature_importance: pd.DataFrame,
     selected_threshold: dict,
     threshold_metrics: pd.DataFrame,
+    cost_optimization: dict,
 ) -> dict:
     """Build the complete dashboard data payload."""
     total_parts = len(df)
@@ -288,7 +317,7 @@ def build_dashboard_data(
             "risk_distribution": get_risk_distribution(df),
             "top_feature_importances": top_features,
         },
-                "model": {
+        "model": {
             "metrics": metrics,
             "confusion_matrix": metrics["confusion_matrix"],
             "threshold_tuning": build_threshold_summary(
@@ -296,6 +325,7 @@ def build_dashboard_data(
                 selected_threshold=selected_threshold,
                 threshold_metrics=threshold_metrics,
             ),
+            "cost_optimization": build_cost_optimization_summary(cost_optimization),
         },
         "recommendations": build_recommendations(
             df=df,
@@ -348,14 +378,24 @@ def print_summary(data: dict) -> None:
 
 
 def main() -> None:
-    df, metrics, feature_importance, selected_threshold, threshold_metrics = load_inputs()
+    (
+        df,
+        metrics,
+        feature_importance,
+        selected_threshold,
+        threshold_metrics,
+        cost_optimization,
+    ) = load_inputs()
+
     dashboard_data = build_dashboard_data(
         df,
         metrics,
         feature_importance,
         selected_threshold,
         threshold_metrics,
+        cost_optimization,
     )
+
     save_dashboard_data(dashboard_data)
     print_summary(dashboard_data)
 

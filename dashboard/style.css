@@ -193,7 +193,8 @@ canvas {
   grid-column: 1 / -1;
 }
 
-.threshold-card {
+.threshold-card,
+.cost-card {
   grid-column: 1 / -1;
 }
 

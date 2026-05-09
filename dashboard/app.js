@@ -203,6 +203,50 @@ function renderThresholdTuning(thresholdTuning) {
   );
 }
 
+function formatCurrency(value, currency) {
+  return `${new Intl.NumberFormat("en-US").format(Number(value).toFixed(0))} ${currency}`;
+}
+
+function renderCostOptimization(costOptimization) {
+  setText(
+    "costOptimizedThreshold",
+    `Threshold ${Number(costOptimization.cost_optimized_threshold).toFixed(2)}`
+  );
+
+  setText(
+    "optimizedTotalCost",
+    formatCurrency(costOptimization.optimized_total_cost, costOptimization.currency)
+  );
+
+  setText(
+    "defaultTotalCost",
+    formatCurrency(costOptimization.default_total_cost, costOptimization.currency)
+  );
+
+  setText(
+    "costSavings",
+    formatCurrency(costOptimization.cost_savings_vs_default, costOptimization.currency)
+  );
+
+  setText(
+    "costAssumptions",
+    `${Number(costOptimization.missed_scrap_cost).toFixed(0)} / ${Number(
+      costOptimization.false_alarm_cost
+    ).toFixed(0)} ${costOptimization.currency}`
+  );
+
+  setText(
+    "costOptimizationNote",
+    `The cost-optimized threshold reduces estimated cost from ${formatCurrency(
+      costOptimization.default_total_cost,
+      costOptimization.currency
+    )} to ${formatCurrency(
+      costOptimization.optimized_total_cost,
+      costOptimization.currency
+    )}, under the assumption that missed scrap is more costly than additional inspection.`
+  );
+}
+
 function renderCharts(charts) {
   createBarChart(
     "scrapByMachineChart",
@@ -251,6 +295,7 @@ async function loadDashboard() {
     renderRecommendations(data.recommendations);
     renderSamplePrediction(data.sample_prediction);
     renderThresholdTuning(data.model.threshold_tuning);
+    renderCostOptimization(data.model.cost_optimization);
   } catch (error) {
     console.error(error);
     document.body.innerHTML = `

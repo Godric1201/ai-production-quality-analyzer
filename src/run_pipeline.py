@@ -22,6 +22,10 @@ PIPELINE_STEPS = [
         "script": PROJECT_ROOT / "src" / "tune_threshold.py",
     },
     {
+    "name": "Optimize threshold by operational cost",
+    "script": PROJECT_ROOT / "src" / "optimize_threshold_cost.py",
+    },
+    {
         "name": "Export dashboard data",
         "script": PROJECT_ROOT / "src" / "export_dashboard_data.py",
     },
@@ -78,6 +82,8 @@ def print_output_summary() -> None:
     PROJECT_ROOT / "outputs" / "scrap_prediction_model.joblib",
     PROJECT_ROOT / "outputs" / "threshold_metrics.csv",
     PROJECT_ROOT / "outputs" / "selected_threshold.json",
+    PROJECT_ROOT / "outputs" / "threshold_cost_analysis.csv",
+    PROJECT_ROOT / "outputs" / "cost_optimized_threshold.json",
     PROJECT_ROOT / "dashboard" / "dashboard_data.json",
     PROJECT_ROOT / "outputs" / "quality_report.md",
 ]
