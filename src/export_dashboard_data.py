@@ -9,8 +9,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "data" / "production_quality_data.csv"
 METRICS_PATH = PROJECT_ROOT / "outputs" / "model_metrics.json"
 FEATURE_IMPORTANCE_PATH = PROJECT_ROOT / "outputs" / "feature_importance.csv"
+SELECTED_THRESHOLD_PATH = PROJECT_ROOT / "outputs" / "selected_threshold.json"
+THRESHOLD_METRICS_PATH = PROJECT_ROOT / "outputs" / "threshold_metrics.csv"
 DASHBOARD_DATA_PATH = PROJECT_ROOT / "dashboard" / "dashboard_data.json"
-
 
 def load_json(path: Path) -> dict:
     """Load a JSON file."""
@@ -21,7 +22,7 @@ def load_json(path: Path) -> dict:
         return json.load(file)
 
 
-def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame]:
+def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame]:
     """Load all inputs required for dashboard export."""
     if not DATA_PATH.exists():
         raise FileNotFoundError(
@@ -34,11 +35,18 @@ def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame]:
             "Run src/train_model.py first."
         )
 
+    if not SELECTED_THRESHOLD_PATH.exists() or not THRESHOLD_METRICS_PATH.exists():
+        raise FileNotFoundError(
+            "Threshold tuning outputs not found. Run src/tune_threshold.py first."
+        )
+
     df = pd.read_csv(DATA_PATH)
     metrics = load_json(METRICS_PATH)
     feature_importance = pd.read_csv(FEATURE_IMPORTANCE_PATH)
+    selected_threshold = load_json(SELECTED_THRESHOLD_PATH)
+    threshold_metrics = pd.read_csv(THRESHOLD_METRICS_PATH)
 
-    return df, metrics, feature_importance
+    return df, metrics, feature_importance, selected_threshold, threshold_metrics
 
 
 def format_percent(value: float) -> float:
@@ -194,11 +202,60 @@ def build_recommendations(
 
     return recommendations
 
+def build_threshold_summary(
+    metrics: dict,
+    selected_threshold: dict,
+    threshold_metrics: pd.DataFrame,
+) -> dict:
+    """Build threshold tuning summary for dashboard visualization."""
+    default_threshold_row = threshold_metrics[
+        threshold_metrics["threshold"] == 0.50
+    ].iloc[0]
+
+    selected_recall = float(selected_threshold["recall"])
+    default_recall = float(default_threshold_row["recall"])
+
+    selected_false_negative = int(selected_threshold["false_negative"])
+    default_false_negative = int(default_threshold_row["false_negative"])
+
+    selected_false_positive = int(selected_threshold["false_positive"])
+    default_false_positive = int(default_threshold_row["false_positive"])
+
+    return {
+        "default_threshold": 0.50,
+        "selected_threshold": selected_threshold["selected_threshold"],
+        "default_recall": default_recall,
+        "selected_recall": selected_recall,
+        "recall_improvement_percentage_points": round(
+            (selected_recall - default_recall) * 100,
+            2,
+        ),
+        "default_false_negative": default_false_negative,
+        "selected_false_negative": selected_false_negative,
+        "missed_scrap_reduction": default_false_negative - selected_false_negative,
+        "default_false_positive": default_false_positive,
+        "selected_false_positive": selected_false_positive,
+        "additional_false_alarms": selected_false_positive - default_false_positive,
+        "selection_reason": selected_threshold["selection_reason"],
+        "metrics_by_threshold": [
+            {
+                "threshold": float(row["threshold"]),
+                "precision": float(row["precision"]),
+                "recall": float(row["recall"]),
+                "f1_score": float(row["f1_score"]),
+                "false_positive": int(row["false_positive"]),
+                "false_negative": int(row["false_negative"]),
+            }
+            for _, row in threshold_metrics.iterrows()
+        ],
+    }
 
 def build_dashboard_data(
     df: pd.DataFrame,
     metrics: dict,
     feature_importance: pd.DataFrame,
+    selected_threshold: dict,
+    threshold_metrics: pd.DataFrame,
 ) -> dict:
     """Build the complete dashboard data payload."""
     total_parts = len(df)
@@ -231,9 +288,14 @@ def build_dashboard_data(
             "risk_distribution": get_risk_distribution(df),
             "top_feature_importances": top_features,
         },
-        "model": {
+                "model": {
             "metrics": metrics,
             "confusion_matrix": metrics["confusion_matrix"],
+            "threshold_tuning": build_threshold_summary(
+                metrics=metrics,
+                selected_threshold=selected_threshold,
+                threshold_metrics=threshold_metrics,
+            ),
         },
         "recommendations": build_recommendations(
             df=df,
@@ -286,8 +348,14 @@ def print_summary(data: dict) -> None:
 
 
 def main() -> None:
-    df, metrics, feature_importance = load_inputs()
-    dashboard_data = build_dashboard_data(df, metrics, feature_importance)
+    df, metrics, feature_importance, selected_threshold, threshold_metrics = load_inputs()
+    dashboard_data = build_dashboard_data(
+        df,
+        metrics,
+        feature_importance,
+        selected_threshold,
+        threshold_metrics,
+    )
     save_dashboard_data(dashboard_data)
     print_summary(dashboard_data)
 

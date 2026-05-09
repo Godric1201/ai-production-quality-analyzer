@@ -135,6 +135,78 @@
       "false_positive": 102,
       "false_negative": 63,
       "true_positive": 26
+    },
+    "threshold_tuning": {
+      "default_threshold": 0.5,
+      "selected_threshold": 0.3,
+      "default_recall": 0.2921,
+      "selected_recall": 0.7416,
+      "recall_improvement_percentage_points": 44.95,
+      "default_false_negative": 63,
+      "selected_false_negative": 23,
+      "missed_scrap_reduction": 40,
+      "default_false_positive": 102,
+      "selected_false_positive": 525,
+      "additional_false_alarms": 423,
+      "selection_reason": "Selected because it reaches the recall target for an early-warning quality use case while maintaining the strongest F1 score among candidates.",
+      "metrics_by_threshold": [
+        {
+          "threshold": 0.2,
+          "precision": 0.0753,
+          "recall": 0.9888,
+          "f1_score": 0.14,
+          "false_positive": 1080,
+          "false_negative": 1
+        },
+        {
+          "threshold": 0.25,
+          "precision": 0.0891,
+          "recall": 0.8989,
+          "f1_score": 0.1621,
+          "false_positive": 818,
+          "false_negative": 9
+        },
+        {
+          "threshold": 0.3,
+          "precision": 0.1117,
+          "recall": 0.7416,
+          "f1_score": 0.1941,
+          "false_positive": 525,
+          "false_negative": 23
+        },
+        {
+          "threshold": 0.35,
+          "precision": 0.1365,
+          "recall": 0.5843,
+          "f1_score": 0.2213,
+          "false_positive": 329,
+          "false_negative": 37
+        },
+        {
+          "threshold": 0.4,
+          "precision": 0.1604,
+          "recall": 0.4831,
+          "f1_score": 0.2409,
+          "false_positive": 225,
+          "false_negative": 46
+        },
+        {
+          "threshold": 0.45,
+          "precision": 0.1737,
+          "recall": 0.3708,
+          "f1_score": 0.2366,
+          "false_positive": 157,
+          "false_negative": 56
+        },
+        {
+          "threshold": 0.5,
+          "precision": 0.2031,
+          "recall": 0.2921,
+          "f1_score": 0.2396,
+          "false_positive": 102,
+          "false_negative": 63
+        }
+      ]
     }
   },
   "recommendations": [

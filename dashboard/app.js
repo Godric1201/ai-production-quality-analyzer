@@ -178,6 +178,31 @@ function renderSamplePrediction(samplePrediction) {
   });
 }
 
+function renderThresholdTuning(thresholdTuning) {
+  setText("defaultThreshold", Number(thresholdTuning.default_threshold).toFixed(2));
+  setText("selectedThreshold", Number(thresholdTuning.selected_threshold).toFixed(2));
+
+  setText(
+    "recallImprovement",
+    `+${Number(thresholdTuning.recall_improvement_percentage_points).toFixed(2)} pp`
+  );
+
+  setText(
+    "thresholdRecall",
+    `${(Number(thresholdTuning.default_recall) * 100).toFixed(2)}% → ${(Number(
+      thresholdTuning.selected_recall
+    ) * 100).toFixed(2)}%`
+  );
+
+  setText("missedScrapReduction", thresholdTuning.missed_scrap_reduction);
+  setText("additionalFalseAlarms", `+${thresholdTuning.additional_false_alarms}`);
+
+  setText(
+    "thresholdNote",
+    `Lowering the decision threshold reduced missed scrap from ${thresholdTuning.default_false_negative} to ${thresholdTuning.selected_false_negative}, at the cost of increasing false alarms from ${thresholdTuning.default_false_positive} to ${thresholdTuning.selected_false_positive}.`
+  );
+}
+
 function renderCharts(charts) {
   createBarChart(
     "scrapByMachineChart",
@@ -221,10 +246,11 @@ async function loadDashboard() {
 
     const data = await response.json();
 
-        renderKpis(data.kpis);
+    renderKpis(data.kpis);
     renderCharts(data.charts);
     renderRecommendations(data.recommendations);
     renderSamplePrediction(data.sample_prediction);
+    renderThresholdTuning(data.model.threshold_tuning);
   } catch (error) {
     console.error(error);
     document.body.innerHTML = `

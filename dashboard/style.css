@@ -193,6 +193,75 @@ canvas {
   grid-column: 1 / -1;
 }
 
+.threshold-card {
+  grid-column: 1 / -1;
+}
+
+.threshold-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.threshold-header p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.threshold-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 13px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.08);
+  color: var(--accent);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.threshold-pill span {
+  font-size: 0.95rem;
+}
+
+.threshold-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.threshold-grid div {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(31, 41, 55, 0.55);
+}
+
+.threshold-grid span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.threshold-grid strong {
+  display: block;
+  font-size: 1.25rem;
+}
+
+.threshold-note {
+  margin: 16px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .insight-card {
   padding: 24px;
 }
@@ -367,4 +436,12 @@ canvas {
   .status-pill {
     white-space: normal;
   }
+.threshold-header {
+  flex-direction: column;
+}
+
+.threshold-grid {
+  grid-template-columns: 1fr;
+}
+
 }
