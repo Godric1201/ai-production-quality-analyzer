@@ -166,7 +166,8 @@ ai-production-quality-analyzer/
 │   ├── train_model.py
 │   ├── analyze_quality.py
 │   ├── export_dashboard_data.py
-│   └── predict_new_part.py
+│   ├── predict_new_part.py
+│   └── run_pipeline.py
 │
 ├── dashboard/
 │   ├── index.html
@@ -217,6 +218,16 @@ source .venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+
+### Optional: Run the full analysis pipeline
+
+After a dataset exists at `data/production_quality_data.csv`, the complete analysis workflow can be executed with one command:
+
+```bash
+python src/run_pipeline.py
+```
+
+This updates the trained model, dashboard data, and automated quality report.
 
 ### 4. Generate synthetic data
 
