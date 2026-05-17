@@ -458,6 +458,50 @@ canvas {
   overflow-x: auto;
 }
 
+.rca-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(31, 41, 55, 0.42);
+}
+
+.toggle-control,
+.sort-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.toggle-control input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.sort-control select {
+  min-width: 180px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--text);
+  font: inherit;
+}
+
+.sort-control select:focus-visible,
+.toggle-control input:focus-visible {
+  outline: 2px solid rgba(56, 189, 248, 0.55);
+  outline-offset: 2px;
+}
+
 .rca-table {
   width: 100%;
   min-width: 980px;
@@ -671,6 +715,20 @@ canvas {
 
 .threshold-grid {
   grid-template-columns: 1fr;
+}
+
+.rca-controls {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.sort-control {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.sort-control select {
+  width: 100%;
 }
 
 }

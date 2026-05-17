@@ -152,6 +152,22 @@
       Highest-risk prediction rows with suspected drivers and engineering actions.
     </p>
 
+    <div class="rca-controls">
+      <label class="toggle-control" for="highRiskOnlyToggle">
+        <input id="highRiskOnlyToggle" type="checkbox" checked />
+        <span>High-risk only</span>
+      </label>
+
+      <label class="sort-control" for="rcaSortControl">
+        <span>Sort by</span>
+        <select id="rcaSortControl">
+          <option value="risk-desc">Risk descending</option>
+          <option value="risk-asc">Risk ascending</option>
+          <option value="batch-id">Batch ID</option>
+        </select>
+      </label>
+    </div>
+
     <div class="rca-table-wrap">
       <table class="rca-table">
         <thead>

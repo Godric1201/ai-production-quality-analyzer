@@ -10,6 +10,8 @@ const chartColors = {
 };
 
 let selectedRootCauseRow = null;
+let selectedRootCausePartId = null;
+let rootCauseResults = [];
 
 Chart.defaults.color = chartTextColor;
 Chart.defaults.borderColor = chartGridColor;
@@ -238,6 +240,47 @@ function getConfidenceLevel(result) {
   return "Watch";
 }
 
+function getRcaControls() {
+  return {
+    highRiskOnly: document.getElementById("highRiskOnlyToggle").checked,
+    sortMode: document.getElementById("rcaSortControl").value,
+  };
+}
+
+function getFilteredRootCauseResults() {
+  const { highRiskOnly, sortMode } = getRcaControls();
+  const filteredRows = rootCauseResults.filter((result) => {
+    if (!highRiskOnly) {
+      return true;
+    }
+
+    return String(result.predicted_scrap_risk || "").toLowerCase() === "high";
+  });
+
+  return [...filteredRows].sort((a, b) => {
+    if (sortMode === "risk-asc") {
+      return Number(a.scrap_probability || 0) - Number(b.scrap_probability || 0);
+    }
+    if (sortMode === "batch-id") {
+      return String(a.part_id || "").localeCompare(String(b.part_id || ""));
+    }
+
+    return Number(b.scrap_probability || 0) - Number(a.scrap_probability || 0);
+  });
+}
+
+function refreshRootCauseResults() {
+  const rows = getFilteredRootCauseResults().slice(0, 8);
+  if (
+    selectedRootCausePartId &&
+    !rows.some((result) => result.part_id === selectedRootCausePartId)
+  ) {
+    closeRootCausePanel();
+  }
+
+  renderRootCauseTable(rows);
+}
+
 function buildSensorEvidence(result) {
   const evidence = [];
   const temperature = Number(result.temperature_c);
@@ -302,6 +345,7 @@ function openRootCausePanel(result, rowElement) {
     selectedRootCauseRow.classList.remove("is-selected");
   }
   selectedRootCauseRow = rowElement;
+  selectedRootCausePartId = result.part_id || null;
   selectedRootCauseRow.classList.add("is-selected");
 
   setText("panelBatchId", result.part_id || "Batch ID unavailable");
@@ -339,6 +383,7 @@ function closeRootCausePanel() {
     selectedRootCauseRow.classList.remove("is-selected");
     selectedRootCauseRow = null;
   }
+  selectedRootCausePartId = null;
 }
 
 function setupRootCausePanel() {
@@ -351,7 +396,16 @@ function setupRootCausePanel() {
   });
 }
 
-function renderRootCauseResults(predictionResults = []) {
+function setupRootCauseControls() {
+  document
+    .getElementById("highRiskOnlyToggle")
+    .addEventListener("change", refreshRootCauseResults);
+  document
+    .getElementById("rcaSortControl")
+    .addEventListener("change", refreshRootCauseResults);
+}
+
+function renderRootCauseTable(predictionResults = []) {
   const tableBody = document.getElementById("rootCauseRows");
   tableBody.innerHTML = "";
 
@@ -366,12 +420,16 @@ function renderRootCauseResults(predictionResults = []) {
     return;
   }
 
-  predictionResults.slice(0, 8).forEach((result) => {
+  predictionResults.forEach((result) => {
     const row = document.createElement("tr");
     const recommendations = splitRecommendationText(result.engineering_recommendations);
     row.tabIndex = 0;
     row.setAttribute("role", "button");
     row.setAttribute("aria-label", `Open root cause details for ${result.part_id || "batch"}`);
+    if (selectedRootCausePartId && result.part_id === selectedRootCausePartId) {
+      selectedRootCauseRow = row;
+      row.classList.add("is-selected");
+    }
 
     const partCell = document.createElement("td");
     partCell.textContent = result.part_id || "N/A";
@@ -417,6 +475,11 @@ function renderRootCauseResults(predictionResults = []) {
     });
     tableBody.appendChild(row);
   });
+}
+
+function renderRootCauseResults(predictionResults = []) {
+  rootCauseResults = Array.isArray(predictionResults) ? predictionResults : [];
+  refreshRootCauseResults();
 }
 
 function formatConditionLabel(key) {
@@ -596,4 +659,5 @@ async function loadDashboard() {
 }
 
 setupRootCausePanel();
+setupRootCauseControls();
 loadDashboard();
