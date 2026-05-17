@@ -504,16 +504,16 @@ canvas {
 
 .rca-table {
   width: 100%;
-  min-width: 980px;
+  min-width: 900px;
   border-collapse: collapse;
 }
 
 .rca-table th,
 .rca-table td {
-  padding: 13px 14px;
+  padding: 11px 14px;
   border-bottom: 1px solid var(--line);
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .rca-table th {
@@ -527,7 +527,7 @@ canvas {
 .rca-table td {
   color: var(--text);
   font-size: 0.88rem;
-  line-height: 1.45;
+  line-height: 1.35;
 }
 
 .rca-table tr:last-child td {
@@ -569,6 +569,34 @@ canvas {
 .rca-recommendations li {
   margin-bottom: 6px;
   color: var(--muted);
+}
+
+.rca-summary-cell {
+  max-width: 360px;
+  color: var(--muted);
+}
+
+.rca-action-cell {
+  min-width: 230px;
+}
+
+.action-preview {
+  display: block;
+  color: var(--text);
+}
+
+.action-preview.muted {
+  color: var(--muted);
+}
+
+.details-hint {
+  display: inline-flex;
+  margin-top: 6px;
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .empty-state {

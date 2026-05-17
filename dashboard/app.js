@@ -160,6 +160,15 @@ function splitRecommendationText(value) {
     .filter(Boolean);
 }
 
+function truncateText(value, maxLength = 96) {
+  const text = String(value || "").trim();
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, maxLength - 1).trim()}…`;
+}
+
 function formatTitleCase(value) {
   return String(value)
     .replace(/\b\w/g, (char) => char.toUpperCase());
@@ -444,22 +453,29 @@ function renderRootCauseTable(predictionResults = []) {
     riskCell.appendChild(riskBadge);
 
     const summaryCell = document.createElement("td");
-    summaryCell.textContent =
-      result.root_cause_summary || "No root cause summary available.";
+    summaryCell.className = "rca-summary-cell";
+    summaryCell.textContent = truncateText(
+      result.root_cause_summary || "No root cause summary available.",
+      118
+    );
 
     const recommendationCell = document.createElement("td");
+    recommendationCell.className = "rca-action-cell";
     if (recommendations.length > 0) {
-      const list = document.createElement("ul");
-      list.className = "rca-recommendations";
-      recommendations.forEach((recommendation) => {
-        const item = document.createElement("li");
-        item.textContent = recommendation;
-        list.appendChild(item);
-      });
-      recommendationCell.appendChild(list);
+      const preview = document.createElement("span");
+      preview.className = "action-preview";
+      preview.textContent = truncateText(recommendations[0], 86);
+      recommendationCell.appendChild(preview);
     } else {
-      recommendationCell.textContent = "No engineering recommendations available.";
+      const preview = document.createElement("span");
+      preview.className = "action-preview muted";
+      preview.textContent = "No action preview available.";
+      recommendationCell.appendChild(preview);
     }
+    const detailHint = document.createElement("span");
+    detailHint.className = "details-hint";
+    detailHint.textContent = "Open details";
+    recommendationCell.appendChild(detailHint);
 
     row.appendChild(partCell);
     row.appendChild(probabilityCell);
