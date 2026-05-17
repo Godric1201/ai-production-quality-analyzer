@@ -1,11 +1,9 @@
 # Screenshots
 
-This directory is reserved for GitHub README screenshots.
+This directory contains screenshots used by the GitHub README showcase.
 
-Planned image paths:
+Included screenshots:
 
-- `docs/screenshots/dashboard-overview.png`
-- `docs/screenshots/rca-investigation-table.png`
-- `docs/screenshots/model-threshold-cost.png`
-
-No binary screenshot files are included yet.
+- `dashboard-overview.png`
+- `rca-investigation-table.png`
+- `model-threshold-cost.png`

@@ -62,7 +62,7 @@ Synthetic Production Data
 ## Technical Stack
 
 | Area | Technology |
-|---|---|
+| --- | --- |
 | Data processing | Python, pandas, NumPy |
 | Machine learning | scikit-learn |
 | Model persistence | joblib |
