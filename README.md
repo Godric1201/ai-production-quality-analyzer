@@ -23,13 +23,17 @@ This project shows how a lightweight AI-assisted workflow can support that decis
 
 ## Dashboard Screenshots
 
-Screenshots will be added under `docs/screenshots/` for the GitHub showcase.
+### Dashboard Overview
 
-Planned assets:
+![Dashboard overview](docs/screenshots/dashboard-overview.png)
 
-- `docs/screenshots/dashboard-overview.png`
-- `docs/screenshots/rca-investigation-table.png`
-- `docs/screenshots/model-threshold-cost.png`
+### RCA Investigation Table
+
+![RCA investigation table](docs/screenshots/rca-investigation-table.png)
+
+### Model Threshold and Cost View
+
+![Model threshold and cost view](docs/screenshots/model-threshold-cost.png)
 
 ## Core Workflow
 
