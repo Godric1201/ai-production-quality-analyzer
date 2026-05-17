@@ -136,6 +136,84 @@ function renderRecommendations(recommendations) {
   });
 }
 
+function formatPredictionProbability(value) {
+  const probability = Number(value);
+  if (!Number.isFinite(probability)) {
+    return "N/A";
+  }
+
+  return probability <= 1 ? formatPercent(probability * 100) : formatPercent(probability);
+}
+
+function splitRecommendationText(value) {
+  if (!value) {
+    return [];
+  }
+
+  return String(value)
+    .split(";")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function renderRootCauseResults(predictionResults = []) {
+  const tableBody = document.getElementById("rootCauseRows");
+  tableBody.innerHTML = "";
+
+  if (!Array.isArray(predictionResults) || predictionResults.length === 0) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.className = "empty-state";
+    cell.colSpan = 5;
+    cell.textContent = "No root cause analysis rows are available.";
+    row.appendChild(cell);
+    tableBody.appendChild(row);
+    return;
+  }
+
+  predictionResults.slice(0, 8).forEach((result) => {
+    const row = document.createElement("tr");
+    const recommendations = splitRecommendationText(result.engineering_recommendations);
+
+    const partCell = document.createElement("td");
+    partCell.textContent = result.part_id || "N/A";
+
+    const probabilityCell = document.createElement("td");
+    probabilityCell.textContent = formatPredictionProbability(result.scrap_probability);
+
+    const riskCell = document.createElement("td");
+    const riskBadge = document.createElement("span");
+    riskBadge.className = "rca-risk";
+    riskBadge.textContent = result.predicted_scrap_risk || "N/A";
+    riskCell.appendChild(riskBadge);
+
+    const summaryCell = document.createElement("td");
+    summaryCell.textContent =
+      result.root_cause_summary || "No root cause summary available.";
+
+    const recommendationCell = document.createElement("td");
+    if (recommendations.length > 0) {
+      const list = document.createElement("ul");
+      list.className = "rca-recommendations";
+      recommendations.forEach((recommendation) => {
+        const item = document.createElement("li");
+        item.textContent = recommendation;
+        list.appendChild(item);
+      });
+      recommendationCell.appendChild(list);
+    } else {
+      recommendationCell.textContent = "No engineering recommendations available.";
+    }
+
+    row.appendChild(partCell);
+    row.appendChild(probabilityCell);
+    row.appendChild(riskCell);
+    row.appendChild(summaryCell);
+    row.appendChild(recommendationCell);
+    tableBody.appendChild(row);
+  });
+}
+
 function formatConditionLabel(key) {
   return key
     .replaceAll("_", " ")
@@ -294,6 +372,7 @@ async function loadDashboard() {
     renderCharts(data.charts);
     renderRecommendations(data.recommendations);
     renderSamplePrediction(data.sample_prediction);
+    renderRootCauseResults(data.prediction_results);
     renderThresholdTuning(data.model.threshold_tuning);
     renderCostOptimization(data.model.cost_optimization);
   } catch (error) {

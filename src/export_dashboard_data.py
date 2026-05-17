@@ -1,7 +1,11 @@
 from pathlib import Path
 import json
 
+import joblib
 import pandas as pd
+
+from root_cause_analysis import analyze_root_causes
+from train_model import CATEGORICAL_FEATURES, MODEL_PATH, NUMERIC_FEATURES
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +17,9 @@ SELECTED_THRESHOLD_PATH = PROJECT_ROOT / "outputs" / "selected_threshold.json"
 THRESHOLD_METRICS_PATH = PROJECT_ROOT / "outputs" / "threshold_metrics.csv"
 COST_OPTIMIZATION_PATH = PROJECT_ROOT / "outputs" / "cost_optimized_threshold.json"
 DASHBOARD_DATA_PATH = PROJECT_ROOT / "dashboard" / "dashboard_data.json"
+PREDICTION_RESULTS_PATH = PROJECT_ROOT / "outputs" / "prediction_results.csv"
+FEATURE_COLUMNS = CATEGORICAL_FEATURES + NUMERIC_FEATURES
+MAX_PREDICTION_EXPORT_ROWS = 25
 
 def load_json(path: Path) -> dict:
     """Load a JSON file."""
@@ -23,7 +30,7 @@ def load_json(path: Path) -> dict:
         return json.load(file)
 
 
-def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame, dict]:
+def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame, dict, object]:
     """Load all inputs required for dashboard export."""
     if not DATA_PATH.exists():
         raise FileNotFoundError(
@@ -44,6 +51,10 @@ def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame,
         raise FileNotFoundError(
             "Cost optimization output not found. Run src/optimize_threshold_cost.py first."
         )
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(
+            f"Model not found at {MODEL_PATH}. Run src/train_model.py first."
+        )
 
     df = pd.read_csv(DATA_PATH)
     metrics = load_json(METRICS_PATH)
@@ -51,13 +62,71 @@ def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame,
     selected_threshold = load_json(SELECTED_THRESHOLD_PATH)
     threshold_metrics = pd.read_csv(THRESHOLD_METRICS_PATH)
     cost_optimization = load_json(COST_OPTIMIZATION_PATH)
+    model = joblib.load(MODEL_PATH)
 
-    return df, metrics, feature_importance, selected_threshold, threshold_metrics, cost_optimization
+    return df, metrics, feature_importance, selected_threshold, threshold_metrics, cost_optimization, model
 
 
 def format_percent(value: float) -> float:
     """Convert a fraction into a rounded percentage."""
     return round(float(value) * 100, 2)
+
+
+def classify_predicted_risk(probability: float, threshold: float) -> str:
+    """Classify a prediction as elevated or low risk using the selected threshold."""
+    if probability >= threshold:
+        return "High"
+    return "Low"
+
+
+def format_recommendations(recommendations: list[str]) -> str:
+    """Format recommendation text for compact dataframe and JSON export."""
+    return "; ".join(recommendations)
+
+
+def analyze_prediction_row(row: pd.Series) -> pd.Series:
+    """Run root cause analysis for one elevated-risk prediction row."""
+    analysis = analyze_root_causes(row)
+
+    return pd.Series(
+        {
+            "root_cause_summary": analysis["summary"],
+            "engineering_recommendations": format_recommendations(
+                analysis["recommendations"]
+            ),
+        }
+    )
+
+
+def build_prediction_results(
+    df: pd.DataFrame,
+    model: object,
+    selected_threshold: dict,
+) -> pd.DataFrame:
+    """Add model predictions and root cause analysis to production rows."""
+    results_df = df.copy()
+    threshold = float(selected_threshold["selected_threshold"])
+
+    probabilities = model.predict_proba(results_df[FEATURE_COLUMNS])[:, 1]
+    results_df["scrap_probability"] = probabilities.round(4)
+    results_df["predicted_scrap_risk"] = results_df["scrap_probability"].apply(
+        lambda probability: classify_predicted_risk(probability, threshold)
+    )
+    results_df["root_cause_summary"] = ""
+    results_df["engineering_recommendations"] = ""
+
+    elevated_risk_mask = results_df["scrap_probability"] >= threshold
+    if elevated_risk_mask.any():
+        root_cause_columns = results_df.loc[elevated_risk_mask].apply(
+            analyze_prediction_row,
+            axis=1,
+        )
+        results_df.loc[
+            elevated_risk_mask,
+            ["root_cause_summary", "engineering_recommendations"],
+        ] = root_cause_columns
+
+    return results_df
 
 
 def get_scrap_rate_by_category(df: pd.DataFrame, column: str) -> list[dict]:
@@ -278,6 +347,77 @@ def build_cost_optimization_summary(cost_optimization: dict) -> dict:
     }
 
 
+def get_prediction_results_export(prediction_results: pd.DataFrame) -> list[dict]:
+    """Return a compact high-risk prediction sample for JSON export."""
+    export_columns = [
+        "part_id",
+        "machine_id",
+        "shift",
+        "material_batch",
+        "temperature_c",
+        "pressure_bar",
+        "cycle_time_s",
+        "operator_experience_years",
+        "vibration_mm_s",
+        "humidity_percent",
+        "scrap",
+        "scrap_probability",
+        "predicted_scrap_risk",
+        "root_cause_summary",
+        "engineering_recommendations",
+    ]
+    available_columns = [
+        column for column in export_columns if column in prediction_results.columns
+    ]
+
+    high_risk_results = prediction_results[
+        prediction_results["predicted_scrap_risk"] == "High"
+    ].copy()
+    if high_risk_results.empty:
+        high_risk_results = prediction_results.copy()
+
+    export_df = (
+        high_risk_results.sort_values("scrap_probability", ascending=False)
+        .head(MAX_PREDICTION_EXPORT_ROWS)
+        .loc[:, available_columns]
+    )
+
+    return json.loads(export_df.to_json(orient="records"))
+
+
+def build_sample_prediction(prediction_results: pd.DataFrame) -> dict:
+    """Build the dashboard sample prediction from the highest-risk row."""
+    sample = prediction_results.sort_values(
+        "scrap_probability",
+        ascending=False,
+    ).iloc[0]
+
+    recommendation_text = sample["engineering_recommendations"]
+    recommendations = [
+        recommendation.strip()
+        for recommendation in recommendation_text.split(";")
+        if recommendation.strip()
+    ]
+    if not recommendations:
+        recommendations = [
+            "No immediate action required. Continue standard process monitoring."
+        ]
+
+    return {
+        "title": "New Part Risk Prediction",
+        "scrap_probability": format_percent(sample["scrap_probability"]),
+        "risk_level": sample["predicted_scrap_risk"],
+        "input_conditions": {
+            column: sample[column]
+            for column in FEATURE_COLUMNS
+            if column in prediction_results.columns
+        },
+        "root_cause_summary": sample["root_cause_summary"],
+        "engineering_recommendations": recommendation_text,
+        "recommendations": recommendations,
+    }
+
+
 def build_dashboard_data(
     df: pd.DataFrame,
     metrics: dict,
@@ -285,6 +425,7 @@ def build_dashboard_data(
     selected_threshold: dict,
     threshold_metrics: pd.DataFrame,
     cost_optimization: dict,
+    prediction_results: pd.DataFrame,
 ) -> dict:
     """Build the complete dashboard data payload."""
     total_parts = len(df)
@@ -332,28 +473,8 @@ def build_dashboard_data(
             highest_risk_machine=highest_risk_machine,
             top_features=top_features,
         ),
-         "sample_prediction": {
-            "title": "New Part Risk Prediction",
-            "scrap_probability": 75.85,
-            "risk_level": "High",
-            "input_conditions": {
-                "machine_id": "M2",
-                "temperature_c": 194.0,
-                "pressure_bar": 6.1,
-                "cycle_time_s": 52.0,
-                "shift": "night",
-                "material_batch": "B4",
-                "operator_experience_years": 1.5,
-                "vibration_mm_s": 3.2,
-                "humidity_percent": 55.0,
-            },
-            "recommendations": [
-                "Inspect M2 calibration and machine condition.",
-                "Review process temperature control above 190°C.",
-                "Investigate cycle time deviation above 50 seconds.",
-                "Check vibration level for possible tool wear or mechanical instability.",
-            ],
-        },
+        "prediction_results": get_prediction_results_export(prediction_results),
+        "sample_prediction": build_sample_prediction(prediction_results),
     }
 
     return dashboard_data
@@ -367,6 +488,12 @@ def save_dashboard_data(data: dict) -> None:
         json.dump(data, file, indent=2)
 
 
+def save_prediction_results(prediction_results: pd.DataFrame) -> None:
+    """Save row-level prediction results with root cause analysis columns."""
+    PREDICTION_RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    prediction_results.to_csv(PREDICTION_RESULTS_PATH, index=False)
+
+
 def print_summary(data: dict) -> None:
     """Print a compact summary after export."""
     print("Dashboard data export completed.")
@@ -375,6 +502,13 @@ def print_summary(data: dict) -> None:
     print(f"Highest risk machine: {data['kpis']['highest_risk_machine']}")
     print(f"Model F1 score: {data['kpis']['model_f1_score']}")
     print(f"Saved to: {DASHBOARD_DATA_PATH}")
+    print(f"Saved prediction results to: {PREDICTION_RESULTS_PATH}")
+
+
+def print_root_cause_summary(prediction_results: pd.DataFrame) -> None:
+    """Print a compact root cause analysis completion message."""
+    analyzed_rows = int((prediction_results["root_cause_summary"] != "").sum())
+    print(f"Root cause analysis completed for {analyzed_rows} elevated-risk rows.")
 
 
 def main() -> None:
@@ -385,7 +519,14 @@ def main() -> None:
         selected_threshold,
         threshold_metrics,
         cost_optimization,
+        model,
     ) = load_inputs()
+
+    prediction_results = build_prediction_results(
+        df=df,
+        model=model,
+        selected_threshold=selected_threshold,
+    )
 
     dashboard_data = build_dashboard_data(
         df,
@@ -394,9 +535,12 @@ def main() -> None:
         selected_threshold,
         threshold_metrics,
         cost_optimization,
+        prediction_results,
     )
 
+    save_prediction_results(prediction_results)
     save_dashboard_data(dashboard_data)
+    print_root_cause_summary(prediction_results)
     print_summary(dashboard_data)
 
 

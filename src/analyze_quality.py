@@ -13,6 +13,7 @@ SELECTED_THRESHOLD_PATH = PROJECT_ROOT / "outputs" / "selected_threshold.json"
 MODEL_COMPARISON_PATH = PROJECT_ROOT / "outputs" / "model_comparison.csv"
 BEST_MODEL_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "best_model_summary.json"
 COST_OPTIMIZATION_PATH = PROJECT_ROOT / "outputs" / "cost_optimized_threshold.json"
+PREDICTION_RESULTS_PATH = PROJECT_ROOT / "outputs" / "prediction_results.csv"
 REPORT_PATH = PROJECT_ROOT / "outputs" / "quality_report.md"
 
 
@@ -24,7 +25,7 @@ def load_json(path: Path) -> dict:
         return json.load(file)
 
 
-def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame, dict, dict]:
+def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame, dict, dict, pd.DataFrame | None]:
     if not DATA_PATH.exists():
         raise FileNotFoundError(
             f"Dataset not found at {DATA_PATH}. Run src/generate_data.py first."
@@ -57,6 +58,11 @@ def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame,
     model_comparison = pd.read_csv(MODEL_COMPARISON_PATH)
     best_model_summary = load_json(BEST_MODEL_SUMMARY_PATH)
     cost_optimization = load_json(COST_OPTIMIZATION_PATH)
+    prediction_results = (
+        pd.read_csv(PREDICTION_RESULTS_PATH)
+        if PREDICTION_RESULTS_PATH.exists()
+        else None
+    )
 
     return (
         df,
@@ -66,6 +72,7 @@ def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame,
         model_comparison,
         best_model_summary,
         cost_optimization,
+        prediction_results,
     )
 
 
@@ -95,6 +102,139 @@ def dataframe_to_markdown_table(df: pd.DataFrame) -> str:
     return df.to_markdown(index=False)
 
 
+def split_recommendations(value: object) -> list[str]:
+    if pd.isna(value):
+        return []
+
+    return [
+        recommendation.strip()
+        for recommendation in str(value).split(";")
+        if recommendation.strip()
+    ]
+
+
+def extract_root_cause_drivers(summary: object) -> list[str]:
+    if pd.isna(summary):
+        return []
+
+    text = str(summary).strip()
+    marker = "mainly due to "
+    if marker not in text.lower():
+        return [text] if text else []
+
+    driver_text = text.lower().split(marker, 1)[1].rstrip(".")
+    return [
+        driver.strip()
+        for driver in driver_text.replace(", and ", ", ").replace(" and ", ", ").split(",")
+        if driver.strip()
+    ]
+
+
+def build_root_cause_section(prediction_results: pd.DataFrame | None) -> str:
+    required_columns = {
+        "part_id",
+        "scrap_probability",
+        "predicted_scrap_risk",
+        "root_cause_summary",
+        "engineering_recommendations",
+    }
+
+    fallback = """## Root Cause Analysis & Engineering Actions
+
+Root cause analysis output is not available for this report run. Generate `outputs/prediction_results.csv` with `root_cause_summary` and `engineering_recommendations` columns to include high-risk engineering actions.
+
+---"""
+
+    if prediction_results is None or prediction_results.empty:
+        return fallback
+
+    if not required_columns.issubset(prediction_results.columns):
+        return fallback
+
+    results = prediction_results.copy()
+    results["root_cause_summary"] = results["root_cause_summary"].fillna("").astype(str)
+    results["engineering_recommendations"] = (
+        results["engineering_recommendations"].fillna("").astype(str)
+    )
+
+    rca_rows = results[results["root_cause_summary"].str.strip() != ""].copy()
+    if rca_rows.empty:
+        return """## Root Cause Analysis & Engineering Actions
+
+No elevated-risk rows with root cause analysis were available in `outputs/prediction_results.csv` for this report run.
+
+---"""
+
+    driver_counts = (
+        pd.Series(
+            driver
+            for summary in rca_rows["root_cause_summary"]
+            for driver in extract_root_cause_drivers(summary)
+        )
+        .value_counts()
+        .head(5)
+    )
+
+    if driver_counts.empty:
+        driver_summary = "- No recurring root cause drivers were available."
+    else:
+        driver_summary = "\n".join(
+            f"- {driver.title()}: {count} elevated-risk rows"
+            for driver, count in driver_counts.items()
+        )
+
+    representative = rca_rows.sort_values(
+        "scrap_probability",
+        ascending=False,
+    ).head(5)
+    representative_table = representative[
+        [
+            "part_id",
+            "scrap_probability",
+            "predicted_scrap_risk",
+            "root_cause_summary",
+        ]
+    ].copy()
+    representative_table["scrap_probability"] = representative_table[
+        "scrap_probability"
+    ].apply(lambda value: f"{float(value) * 100:.2f}%")
+
+    recommendation_counts = (
+        pd.Series(
+            recommendation
+            for value in rca_rows["engineering_recommendations"]
+            for recommendation in split_recommendations(value)
+        )
+        .value_counts()
+        .head(5)
+    )
+
+    if recommendation_counts.empty:
+        recommendation_summary = "- No engineering recommendations were available."
+    else:
+        recommendation_summary = "\n".join(
+            f"- {recommendation}" for recommendation in recommendation_counts.index
+        )
+
+    return f"""## Root Cause Analysis & Engineering Actions
+
+The prediction export includes **{len(rca_rows):,} elevated-risk rows with root cause analysis**. The rule-based analysis converts high-risk model predictions into concise engineering context for report review and dashboard follow-up.
+
+### Most Recurring Root Cause Drivers
+
+{driver_summary}
+
+### Representative High-Risk Parts / Batches
+
+{dataframe_to_markdown_table(representative_table)}
+
+### Concise Engineering Actions
+
+{recommendation_summary}
+
+---"""
+
+
 def build_report(
     df: pd.DataFrame,
     metrics: dict,
@@ -103,6 +243,7 @@ def build_report(
     model_comparison: pd.DataFrame,
     best_model_summary: dict,
     cost_optimization: dict,
+    prediction_results: pd.DataFrame | None,
 ) -> str:
     total_parts = len(df)
     overall_scrap_rate = df["scrap"].mean()
@@ -141,6 +282,7 @@ def build_report(
     default_recall = metrics["recall"]
     tuned_recall = selected_threshold["recall"]
     recall_improvement_pp = (tuned_recall - default_recall) * 100
+    root_cause_section = build_root_cause_section(prediction_results)
 
     report = f"""# AI Production Quality Analysis Report
 
@@ -312,6 +454,8 @@ This indicates that machine-level effects should be investigated before assuming
 
 ---
 
+{root_cause_section}
+
 ## Engineering Recommendations
 
 1. **Inspect and calibrate {highest_risk_machine}.**  
@@ -393,6 +537,7 @@ def main() -> None:
         model_comparison,
         best_model_summary,
         cost_optimization,
+        prediction_results,
     ) = load_inputs()
 
     report = build_report(
@@ -403,6 +548,7 @@ def main() -> None:
         model_comparison,
         best_model_summary,
         cost_optimization,
+        prediction_results,
     )
 
     save_report(report)

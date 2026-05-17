@@ -120,6 +120,28 @@
     <ul id="samplePredictionRecommendations" class="compact-list"></ul>
   </article>
 
+  <article class="insight-card rca-card">
+    <h2>High-Risk Root Cause Analysis</h2>
+    <p class="prediction-subtitle">
+      Highest-risk prediction rows with suspected drivers and engineering actions.
+    </p>
+
+    <div class="rca-table-wrap">
+      <table class="rca-table">
+        <thead>
+          <tr>
+            <th>Part ID</th>
+            <th>Scrap Probability</th>
+            <th>Risk</th>
+            <th>Root Cause Summary</th>
+            <th>Engineering Recommendations</th>
+          </tr>
+        </thead>
+        <tbody id="rootCauseRows"></tbody>
+      </table>
+    </div>
+  </article>
+
   <article class="insight-card model-card">
     <h2>Model Performance</h2>
     <div class="metric-list horizontal-metrics">

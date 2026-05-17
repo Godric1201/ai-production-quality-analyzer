@@ -186,6 +186,38 @@ This indicates that machine-level effects should be investigated before assuming
 
 ---
 
+## Root Cause Analysis & Engineering Actions
+
+The prediction export includes **2,291 elevated-risk rows with root cause analysis**. The rule-based analysis converts high-risk model predictions into concise engineering context for report review and dashboard follow-up.
+
+### Most Recurring Root Cause Drivers
+
+- Machine M2 Risk Pattern: 1115 elevated-risk rows
+- Material Batch B4: 593 elevated-risk rows
+- Elevated Vibration: 539 elevated-risk rows
+- Night Shift Production: 516 elevated-risk rows
+- Late Shift Production: 488 elevated-risk rows
+
+### Representative High-Risk Parts / Batches
+
+| part_id   | scrap_probability   | predicted_scrap_risk   | root_cause_summary                                                                                                |
+|:----------|:--------------------|:-----------------------|:------------------------------------------------------------------------------------------------------------------|
+| P000977   | 81.09%              | High                   | The batch shows high scrap risk mainly due to very high temperature, high vibration, and machine m2 risk pattern. |
+| P002546   | 80.21%              | High                   | The batch shows high scrap risk mainly due to very high temperature, high vibration, and machine m2 risk pattern. |
+| P001643   | 78.02%              | High                   | The batch shows high scrap risk mainly due to high vibration, long cycle time, and machine m2 risk pattern.       |
+| P003015   | 77.29%              | High                   | The batch shows high scrap risk mainly due to very high temperature, abnormal cycle time, and elevated vibration. |
+| P004071   | 77.00%              | High                   | The batch shows high scrap risk mainly due to high vibration, high temperature, and long cycle time.              |
+
+### Concise Engineering Actions
+
+- Inspect M2 calibration, maintenance status, and recent quality history.
+- Review shift handoff notes and confirm standard work adherence.
+- Quarantine or sample-check material batch B4 and compare against supplier lot history.
+- Apply additional process checks during night shift production.
+- Trend vibration for the machine and inspect tooling if the signal persists.
+
+---
+
 ## Engineering Recommendations
 
 1. **Inspect and calibrate M2.**  

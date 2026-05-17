@@ -84,6 +84,7 @@ def print_output_summary() -> None:
     PROJECT_ROOT / "outputs" / "selected_threshold.json",
     PROJECT_ROOT / "outputs" / "threshold_cost_analysis.csv",
     PROJECT_ROOT / "outputs" / "cost_optimized_threshold.json",
+    PROJECT_ROOT / "outputs" / "prediction_results.csv",
     PROJECT_ROOT / "dashboard" / "dashboard_data.json",
     PROJECT_ROOT / "outputs" / "quality_report.md",
 ]
