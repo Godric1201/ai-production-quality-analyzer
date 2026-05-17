@@ -47,9 +47,35 @@
         </article>
 
         <article class="kpi-card">
-          <span class="kpi-label">Model F1 Score</span>
+          <span class="kpi-label">Warning Model F1</span>
           <strong id="modelF1Score">—</strong>
           <p>Scrap prediction classification performance</p>
+        </article>
+      </section>
+
+      <section class="rca-summary-grid">
+        <article class="rca-summary-card">
+          <span class="kpi-label">Total Predictions</span>
+          <strong id="totalPredictions">â€”</strong>
+          <p>Rows exported for RCA drill-down</p>
+        </article>
+
+        <article class="rca-summary-card warning">
+          <span class="kpi-label">High-Risk Batches</span>
+          <strong id="highRiskBatches">â€”</strong>
+          <p>Predictions above the warning threshold</p>
+        </article>
+
+        <article class="rca-summary-card">
+          <span class="kpi-label">Dominant Root Cause</span>
+          <strong id="dominantRootCause">â€”</strong>
+          <p>Most common RCA category in exported rows</p>
+        </article>
+
+        <article class="rca-summary-card danger">
+          <span class="kpi-label">Average Predicted Risk</span>
+          <strong id="averagePredictedRisk">â€”</strong>
+          <p>Mean scrap probability in RCA rows</p>
         </article>
       </section>
 
@@ -126,6 +152,22 @@
       Highest-risk prediction rows with suspected drivers and engineering actions.
     </p>
 
+    <div class="rca-controls">
+      <label class="toggle-control" for="highRiskOnlyToggle">
+        <input id="highRiskOnlyToggle" type="checkbox" checked />
+        <span>High-risk only</span>
+      </label>
+
+      <label class="sort-control" for="rcaSortControl">
+        <span>Sort by</span>
+        <select id="rcaSortControl">
+          <option value="risk-desc">Risk descending</option>
+          <option value="risk-asc">Risk ascending</option>
+          <option value="batch-id">Batch ID</option>
+        </select>
+      </label>
+    </div>
+
     <div class="rca-table-wrap">
       <table class="rca-table">
         <thead>
@@ -134,7 +176,7 @@
             <th>Scrap Probability</th>
             <th>Risk</th>
             <th>Root Cause Summary</th>
-            <th>Engineering Recommendations</th>
+            <th>Action Preview</th>
           </tr>
         </thead>
         <tbody id="rootCauseRows"></tbody>
@@ -231,6 +273,40 @@
   <p class="threshold-note" id="costOptimizationNote">—</p>
 </article>
 </section>
+    </main>
+  </div>
+
+  <div class="panel-backdrop" id="rcaPanelBackdrop"></div>
+  <aside class="rca-detail-panel" id="rcaDetailPanel" aria-hidden="true">
+    <div class="panel-header">
+      <div>
+        <p class="eyebrow">RCA Drill-Down</p>
+        <h2 id="panelBatchId">Batch ID</h2>
+      </div>
+      <button class="panel-close" id="closeRcaPanel" type="button">Close</button>
+    </div>
+
+    <div class="panel-risk-card">
+      <span>Predicted Failure Risk</span>
+      <strong id="panelFailureRisk">â€”</strong>
+      <p id="panelConfidenceLevel">Confidence: â€”</p>
+    </div>
+
+    <section class="panel-section">
+      <h3>Root Cause Summary</h3>
+      <p id="panelRootCauseSummary">Select a high-risk row to view details.</p>
+    </section>
+
+    <section class="panel-section">
+      <h3>Sensor Evidence / Anomaly Indicators</h3>
+      <ul id="panelSensorEvidence" class="panel-list"></ul>
+    </section>
+
+    <section class="panel-section">
+      <h3>Engineering Recommendations</h3>
+      <ul id="panelEngineeringRecommendations" class="panel-list"></ul>
+    </section>
+  </aside>
 
   <script src="app.js?v=2"></script>
 </body>

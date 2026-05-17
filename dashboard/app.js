@@ -9,6 +9,10 @@ const chartColors = {
   violet: "rgba(167, 139, 250, 0.82)",
 };
 
+let selectedRootCauseRow = null;
+let selectedRootCausePartId = null;
+let rootCauseResults = [];
+
 Chart.defaults.color = chartTextColor;
 Chart.defaults.borderColor = chartGridColor;
 Chart.defaults.font.family =
@@ -156,7 +160,261 @@ function splitRecommendationText(value) {
     .filter(Boolean);
 }
 
-function renderRootCauseResults(predictionResults = []) {
+function truncateText(value, maxLength = 96) {
+  const text = String(value || "").trim();
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, maxLength - 1).trim()}…`;
+}
+
+function formatTitleCase(value) {
+  return String(value)
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function extractRootCauseDrivers(summary) {
+  if (!summary) {
+    return [];
+  }
+
+  const text = String(summary).trim();
+  const marker = "mainly due to ";
+  const markerIndex = text.toLowerCase().indexOf(marker);
+  if (markerIndex === -1) {
+    return text ? [text] : [];
+  }
+
+  return text
+    .slice(markerIndex + marker.length)
+    .replace(/\.$/, "")
+    .replace(", and ", ", ")
+    .replace(" and ", ", ")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getDominantRootCause(predictionResults) {
+  const counts = new Map();
+
+  predictionResults.forEach((result) => {
+    extractRootCauseDrivers(result.root_cause_summary).forEach((driver) => {
+      counts.set(driver, (counts.get(driver) || 0) + 1);
+    });
+  });
+
+  if (counts.size === 0) {
+    return "N/A";
+  }
+
+  const [driver] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+  return formatTitleCase(driver);
+}
+
+function renderRootCauseSummaryCards(predictionResults = []) {
+  const rows = Array.isArray(predictionResults) ? predictionResults : [];
+  const highRiskCount = rows.filter(
+    (result) => String(result.predicted_scrap_risk || "").toLowerCase() === "high"
+  ).length;
+  const probabilities = rows
+    .map((result) => Number(result.scrap_probability))
+    .filter(Number.isFinite);
+  const averageRisk =
+    probabilities.length > 0
+      ? probabilities.reduce((sum, value) => sum + value, 0) / probabilities.length
+      : null;
+
+  setText("totalPredictions", formatNumber(rows.length));
+  setText("highRiskBatches", formatNumber(highRiskCount));
+  setText("dominantRootCause", getDominantRootCause(rows));
+  setText(
+    "averagePredictedRisk",
+    averageRisk === null ? "N/A" : formatPredictionProbability(averageRisk)
+  );
+}
+
+function getConfidenceLevel(result) {
+  const probability = Number(result.scrap_probability);
+  if (!Number.isFinite(probability)) {
+    return "Unknown";
+  }
+  if (probability >= 0.7) {
+    return "High";
+  }
+  if (probability >= 0.5) {
+    return "Medium";
+  }
+  return "Watch";
+}
+
+function getRcaControls() {
+  return {
+    highRiskOnly: document.getElementById("highRiskOnlyToggle").checked,
+    sortMode: document.getElementById("rcaSortControl").value,
+  };
+}
+
+function getFilteredRootCauseResults() {
+  const { highRiskOnly, sortMode } = getRcaControls();
+  const filteredRows = rootCauseResults.filter((result) => {
+    if (!highRiskOnly) {
+      return true;
+    }
+
+    return String(result.predicted_scrap_risk || "").toLowerCase() === "high";
+  });
+
+  return [...filteredRows].sort((a, b) => {
+    if (sortMode === "risk-asc") {
+      return Number(a.scrap_probability || 0) - Number(b.scrap_probability || 0);
+    }
+    if (sortMode === "batch-id") {
+      return String(a.part_id || "").localeCompare(String(b.part_id || ""));
+    }
+
+    return Number(b.scrap_probability || 0) - Number(a.scrap_probability || 0);
+  });
+}
+
+function refreshRootCauseResults() {
+  const rows = getFilteredRootCauseResults().slice(0, 8);
+  if (
+    selectedRootCausePartId &&
+    !rows.some((result) => result.part_id === selectedRootCausePartId)
+  ) {
+    closeRootCausePanel();
+  }
+
+  renderRootCauseTable(rows);
+}
+
+function buildSensorEvidence(result) {
+  const evidence = [];
+  const temperature = Number(result.temperature_c);
+  const pressure = Number(result.pressure_bar);
+  const cycleTime = Number(result.cycle_time_s);
+  const vibration = Number(result.vibration_mm_s);
+  const humidity = Number(result.humidity_percent);
+  const operatorExperience = Number(result.operator_experience_years);
+
+  if (Number.isFinite(temperature) && temperature > 190) {
+    evidence.push(`Temperature ${temperature.toFixed(1)} C exceeds the 190 C monitoring band.`);
+  }
+  if (Number.isFinite(pressure) && pressure >= 6.4) {
+    evidence.push(`Pressure ${pressure.toFixed(2)} bar is above the expected range.`);
+  } else if (Number.isFinite(pressure) && pressure <= 5.1) {
+    evidence.push(`Pressure ${pressure.toFixed(2)} bar is below the expected range.`);
+  }
+  if (Number.isFinite(cycleTime) && cycleTime > 50) {
+    evidence.push(`Cycle time ${cycleTime.toFixed(1)} s is above the 50 s warning threshold.`);
+  }
+  if (Number.isFinite(vibration) && vibration > 2.7) {
+    evidence.push(`Vibration ${vibration.toFixed(2)} mm/s is above the normal monitoring band.`);
+  }
+  if (Number.isFinite(humidity) && humidity > 60) {
+    evidence.push(`Humidity ${humidity.toFixed(1)}% is above the configured monitoring band.`);
+  }
+  if (Number.isFinite(operatorExperience) && operatorExperience < 2) {
+    evidence.push(`Operator experience ${operatorExperience.toFixed(1)} years is below the guidance threshold.`);
+  }
+  if (result.machine_id === "M2") {
+    evidence.push("Machine M2 is configured as a higher-risk asset.");
+  }
+  if (result.material_batch === "B4") {
+    evidence.push("Material batch B4 is configured as a higher-risk material batch.");
+  }
+  if (result.shift === "night" || result.shift === "late") {
+    evidence.push(`Production occurred on the ${result.shift} shift.`);
+  }
+
+  return evidence.length > 0
+    ? evidence
+    : ["No configured sensor anomaly indicators are available for this row."];
+}
+
+function renderPanelList(listId, items) {
+  const list = document.getElementById(listId);
+  list.innerHTML = "";
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    list.appendChild(li);
+  });
+}
+
+function openRootCausePanel(result, rowElement) {
+  const panel = document.getElementById("rcaDetailPanel");
+  const backdrop = document.getElementById("rcaPanelBackdrop");
+  const recommendations = splitRecommendationText(result.engineering_recommendations);
+
+  if (selectedRootCauseRow) {
+    selectedRootCauseRow.classList.remove("is-selected");
+  }
+  selectedRootCauseRow = rowElement;
+  selectedRootCausePartId = result.part_id || null;
+  selectedRootCauseRow.classList.add("is-selected");
+
+  setText("panelBatchId", result.part_id || "Batch ID unavailable");
+  setText(
+    "panelFailureRisk",
+    `${formatPredictionProbability(result.scrap_probability)} (${result.predicted_scrap_risk || "N/A"})`
+  );
+  setText("panelConfidenceLevel", `Confidence: ${getConfidenceLevel(result)}`);
+  setText(
+    "panelRootCauseSummary",
+    result.root_cause_summary || "No root cause summary available."
+  );
+  renderPanelList("panelSensorEvidence", buildSensorEvidence(result));
+  renderPanelList(
+    "panelEngineeringRecommendations",
+    recommendations.length > 0
+      ? recommendations
+      : ["No engineering recommendations available."]
+  );
+
+  panel.classList.add("is-open");
+  backdrop.classList.add("is-open");
+  panel.setAttribute("aria-hidden", "false");
+}
+
+function closeRootCausePanel() {
+  const panel = document.getElementById("rcaDetailPanel");
+  const backdrop = document.getElementById("rcaPanelBackdrop");
+
+  panel.classList.remove("is-open");
+  backdrop.classList.remove("is-open");
+  panel.setAttribute("aria-hidden", "true");
+
+  if (selectedRootCauseRow) {
+    selectedRootCauseRow.classList.remove("is-selected");
+    selectedRootCauseRow = null;
+  }
+  selectedRootCausePartId = null;
+}
+
+function setupRootCausePanel() {
+  document.getElementById("closeRcaPanel").addEventListener("click", closeRootCausePanel);
+  document.getElementById("rcaPanelBackdrop").addEventListener("click", closeRootCausePanel);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeRootCausePanel();
+    }
+  });
+}
+
+function setupRootCauseControls() {
+  document
+    .getElementById("highRiskOnlyToggle")
+    .addEventListener("change", refreshRootCauseResults);
+  document
+    .getElementById("rcaSortControl")
+    .addEventListener("change", refreshRootCauseResults);
+}
+
+function renderRootCauseTable(predictionResults = []) {
   const tableBody = document.getElementById("rootCauseRows");
   tableBody.innerHTML = "";
 
@@ -171,9 +429,16 @@ function renderRootCauseResults(predictionResults = []) {
     return;
   }
 
-  predictionResults.slice(0, 8).forEach((result) => {
+  predictionResults.forEach((result) => {
     const row = document.createElement("tr");
     const recommendations = splitRecommendationText(result.engineering_recommendations);
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
+    row.setAttribute("aria-label", `Open root cause details for ${result.part_id || "batch"}`);
+    if (selectedRootCausePartId && result.part_id === selectedRootCausePartId) {
+      selectedRootCauseRow = row;
+      row.classList.add("is-selected");
+    }
 
     const partCell = document.createElement("td");
     partCell.textContent = result.part_id || "N/A";
@@ -188,30 +453,49 @@ function renderRootCauseResults(predictionResults = []) {
     riskCell.appendChild(riskBadge);
 
     const summaryCell = document.createElement("td");
-    summaryCell.textContent =
-      result.root_cause_summary || "No root cause summary available.";
+    summaryCell.className = "rca-summary-cell";
+    summaryCell.textContent = truncateText(
+      result.root_cause_summary || "No root cause summary available.",
+      118
+    );
 
     const recommendationCell = document.createElement("td");
+    recommendationCell.className = "rca-action-cell";
     if (recommendations.length > 0) {
-      const list = document.createElement("ul");
-      list.className = "rca-recommendations";
-      recommendations.forEach((recommendation) => {
-        const item = document.createElement("li");
-        item.textContent = recommendation;
-        list.appendChild(item);
-      });
-      recommendationCell.appendChild(list);
+      const preview = document.createElement("span");
+      preview.className = "action-preview";
+      preview.textContent = truncateText(recommendations[0], 86);
+      recommendationCell.appendChild(preview);
     } else {
-      recommendationCell.textContent = "No engineering recommendations available.";
+      const preview = document.createElement("span");
+      preview.className = "action-preview muted";
+      preview.textContent = "No action preview available.";
+      recommendationCell.appendChild(preview);
     }
+    const detailHint = document.createElement("span");
+    detailHint.className = "details-hint";
+    detailHint.textContent = "Open details";
+    recommendationCell.appendChild(detailHint);
 
     row.appendChild(partCell);
     row.appendChild(probabilityCell);
     row.appendChild(riskCell);
     row.appendChild(summaryCell);
     row.appendChild(recommendationCell);
+    row.addEventListener("click", () => openRootCausePanel(result, row));
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openRootCausePanel(result, row);
+      }
+    });
     tableBody.appendChild(row);
   });
+}
+
+function renderRootCauseResults(predictionResults = []) {
+  rootCauseResults = Array.isArray(predictionResults) ? predictionResults : [];
+  refreshRootCauseResults();
 }
 
 function formatConditionLabel(key) {
@@ -369,6 +653,7 @@ async function loadDashboard() {
     const data = await response.json();
 
     renderKpis(data.kpis);
+    renderRootCauseSummaryCards(data.prediction_results);
     renderCharts(data.charts);
     renderRecommendations(data.recommendations);
     renderSamplePrediction(data.sample_prediction);
@@ -389,4 +674,6 @@ async function loadDashboard() {
   }
 }
 
+setupRootCausePanel();
+setupRootCauseControls();
 loadDashboard();
