@@ -1051,6 +1051,80 @@
       }
     ]
   },
+  "model_evaluation": {
+    "summary": {
+      "roc_auc": 0.7129,
+      "pr_auc": 0.2099,
+      "baseline_scrap_rate": 0.0712,
+      "selected_threshold": 0.3,
+      "cost_optimized_threshold": 0.4,
+      "model_role": "early_warning_decision_support",
+      "interpretation": "The model is useful as an early-warning signal for engineering review, but its precision and recall trade-offs mean it should not be treated as an autonomous release or certification decision."
+    },
+    "risk_bands": [
+      {
+        "risk_band": "Low risk",
+        "row_count": 659,
+        "actual_scrap_count": 23,
+        "actual_scrap_rate": 0.0349,
+        "average_predicted_risk": 0.2443,
+        "review_priority": "Standard monitoring"
+      },
+      {
+        "risk_band": "Medium risk",
+        "row_count": 463,
+        "actual_scrap_count": 40,
+        "actual_scrap_rate": 0.0864,
+        "average_predicted_risk": 0.372,
+        "review_priority": "Additional monitoring"
+      },
+      {
+        "risk_band": "High risk",
+        "row_count": 128,
+        "actual_scrap_count": 26,
+        "actual_scrap_rate": 0.2031,
+        "average_predicted_risk": 0.569,
+        "review_priority": "Engineering review priority"
+      }
+    ],
+    "threshold_tradeoff": [
+      {
+        "threshold": 0.4,
+        "recall": 0.4831,
+        "false_positive": 225,
+        "false_negative": 46,
+        "total_cost": 6850.0
+      },
+      {
+        "threshold": 0.35,
+        "recall": 0.5843,
+        "false_positive": 329,
+        "false_negative": 37,
+        "total_cost": 6990.0
+      },
+      {
+        "threshold": 0.45,
+        "recall": 0.3708,
+        "false_positive": 157,
+        "false_negative": 56,
+        "total_cost": 7170.0
+      },
+      {
+        "threshold": 0.5,
+        "recall": 0.2921,
+        "false_positive": 102,
+        "false_negative": 63,
+        "total_cost": 7320.0
+      },
+      {
+        "threshold": 0.3,
+        "recall": 0.7416,
+        "false_positive": 525,
+        "false_negative": 23,
+        "total_cost": 7550.0
+      }
+    ]
+  },
   "case_trace": {
     "part_id": "NB000001",
     "input_conditions": {
