@@ -1,0 +1,91 @@
+{
+  "input_path": "data\\new_production_batch.csv",
+  "config_path": "config\\spec_requirements.yaml",
+  "row_count": 10,
+  "requirement_count": 10,
+  "status_counts": {
+    "COMPLIANT": 5,
+    "CRITICAL_VIOLATION": 1,
+    "WARNING_VIOLATION": 4
+  },
+  "violation_counts_by_requirement": [
+    {
+      "requirement_id": "CYCLE_TIME_MAX_WARNING",
+      "parameter": "cycle_time_s",
+      "severity": "warning",
+      "count": 4
+    },
+    {
+      "requirement_id": "TEMP_MAX_WARNING",
+      "parameter": "temperature_c",
+      "severity": "warning",
+      "count": 4
+    },
+    {
+      "requirement_id": "VIBRATION_MAX_WARNING",
+      "parameter": "vibration_mm_s",
+      "severity": "warning",
+      "count": 4
+    },
+    {
+      "requirement_id": "HUMIDITY_MAX_WARNING",
+      "parameter": "humidity_percent",
+      "severity": "warning",
+      "count": 3
+    },
+    {
+      "requirement_id": "LOW_OPERATOR_EXPERIENCE_WARNING",
+      "parameter": "operator_experience_years",
+      "severity": "warning",
+      "count": 3
+    },
+    {
+      "requirement_id": "PRESSURE_MAX_WARNING",
+      "parameter": "pressure_bar",
+      "severity": "warning",
+      "count": 2
+    },
+    {
+      "requirement_id": "CYCLE_TIME_MAX_CRITICAL",
+      "parameter": "cycle_time_s",
+      "severity": "critical",
+      "count": 1
+    },
+    {
+      "requirement_id": "PRESSURE_MIN_WARNING",
+      "parameter": "pressure_bar",
+      "severity": "warning",
+      "count": 1
+    },
+    {
+      "requirement_id": "TEMP_MAX_CRITICAL",
+      "parameter": "temperature_c",
+      "severity": "critical",
+      "count": 1
+    },
+    {
+      "requirement_id": "VIBRATION_MAX_CRITICAL",
+      "parameter": "vibration_mm_s",
+      "severity": "critical",
+      "count": 1
+    }
+  ],
+  "critical_records": [
+    {
+      "part_id": "NB000001",
+      "critical_violation_count": 3,
+      "violated_requirement_ids": [
+        "TEMP_MAX_WARNING",
+        "TEMP_MAX_CRITICAL",
+        "VIBRATION_MAX_WARNING",
+        "VIBRATION_MAX_CRITICAL",
+        "CYCLE_TIME_MAX_WARNING",
+        "CYCLE_TIME_MAX_CRITICAL",
+        "PRESSURE_MAX_WARNING",
+        "HUMIDITY_MAX_WARNING",
+        "LOW_OPERATOR_EXPERIENCE_WARNING"
+      ]
+    }
+  ],
+  "note": "Synthetic specification checks for engineering review support; not a validated factory quality gate."
+}

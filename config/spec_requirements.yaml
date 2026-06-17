@@ -1,0 +1,103 @@
+version: 1
+description: "Illustrative engineering specification checks for the synthetic production quality prototype. These are not validated factory limits."
+
+requirements:
+  - id: TEMP_MAX_WARNING
+    parameter: temperature_c
+    type: numeric_limit
+    operator: "<="
+    value: 190
+    severity: warning
+    requirement_text: "Process temperature should remain within the normal operating window."
+    engineering_rationale: "Elevated temperature may indicate thermal drift or insufficient cooling control."
+    recommended_action: "Review temperature control and cooling stability for affected records."
+
+  - id: TEMP_MAX_CRITICAL
+    parameter: temperature_c
+    type: numeric_limit
+    operator: "<="
+    value: 195
+    severity: critical
+    requirement_text: "Process temperature should not exceed the critical monitoring limit."
+    engineering_rationale: "Very high temperature may increase scrap risk or indicate process instability."
+    recommended_action: "Escalate for engineering review and check thermal process settings."
+
+  - id: VIBRATION_MAX_WARNING
+    parameter: vibration_mm_s
+    type: numeric_limit
+    operator: "<="
+    value: 2.7
+    severity: warning
+    requirement_text: "Vibration should remain within the normal monitoring band."
+    engineering_rationale: "Elevated vibration may indicate early tool wear, fixture instability, or imbalance."
+    recommended_action: "Trend vibration and inspect tooling if the signal persists."
+
+  - id: VIBRATION_MAX_CRITICAL
+    parameter: vibration_mm_s
+    type: numeric_limit
+    operator: "<="
+    value: 3.1
+    severity: critical
+    requirement_text: "Vibration should not exceed the critical inspection threshold."
+    engineering_rationale: "High vibration may indicate mechanical instability or maintenance issues."
+    recommended_action: "Perform engineering review of machine condition, tooling, and fixture stability."
+
+  - id: CYCLE_TIME_MAX_WARNING
+    parameter: cycle_time_s
+    type: numeric_limit
+    operator: "<="
+    value: 50
+    severity: warning
+    requirement_text: "Cycle time should remain within the expected process window."
+    engineering_rationale: "Long cycle time may indicate setup drift, handling delay, or process instability."
+    recommended_action: "Compare against setup records and operator notes."
+
+  - id: CYCLE_TIME_MAX_CRITICAL
+    parameter: cycle_time_s
+    type: numeric_limit
+    operator: "<="
+    value: 53
+    severity: critical
+    requirement_text: "Cycle time should not materially exceed the critical monitoring limit."
+    engineering_rationale: "Abnormal cycle time may indicate machine wear, unstable settings, or material handling problems."
+    recommended_action: "Investigate machine condition and recent setup changes."
+
+  - id: PRESSURE_MIN_WARNING
+    parameter: pressure_bar
+    type: numeric_limit
+    operator: ">="
+    value: 5.1
+    severity: warning
+    requirement_text: "Process pressure should not fall below the lower monitoring band."
+    engineering_rationale: "Low pressure may indicate leakage, feed variation, or insufficient process force."
+    recommended_action: "Check pressure regulation, fixture condition, and feed stability."
+
+  - id: PRESSURE_MAX_WARNING
+    parameter: pressure_bar
+    type: numeric_limit
+    operator: "<="
+    value: 6.4
+    severity: warning
+    requirement_text: "Process pressure should not exceed the upper monitoring band."
+    engineering_rationale: "High pressure may indicate restriction, blocked flow path, or aggressive process settings."
+    recommended_action: "Inspect pressure regulation and tooling restrictions."
+
+  - id: HUMIDITY_MAX_WARNING
+    parameter: humidity_percent
+    type: numeric_limit
+    operator: "<="
+    value: 60
+    severity: warning
+    requirement_text: "Humidity should remain within the configured environmental monitoring band."
+    engineering_rationale: "High humidity may affect material behavior, handling, or surface quality."
+    recommended_action: "Check humidity controls and material storage conditions."
+
+  - id: LOW_OPERATOR_EXPERIENCE_WARNING
+    parameter: operator_experience_years
+    type: numeric_limit
+    operator: ">="
+    value: 2
+    severity: warning
+    requirement_text: "Low-experience operation should receive additional process guidance."
+    engineering_rationale: "Less experienced operators may need checklist support during unstable process conditions."
+    recommended_action: "Use operator guidance, checklist support, or supervisor review."
