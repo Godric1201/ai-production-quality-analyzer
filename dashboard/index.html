@@ -88,6 +88,77 @@
         </div>
       </section>
 
+      <section class="rulebook-section">
+        <div class="section-heading">
+          <h2>Engineering Rulebook / Configured Checks</h2>
+          <p>
+            Rules are loaded from configuration files and used for decision support, so engineering limits and review logic remain visible instead of hidden inside model code.
+          </p>
+        </div>
+
+        <div class="rulebook-summary-grid">
+          <article class="rulebook-summary-card">
+            <span class="kpi-label">Spec Requirements</span>
+            <strong id="rulebookSpecCount">Not generated yet</strong>
+            <p>Configured process checks</p>
+          </article>
+
+          <article class="rulebook-summary-card">
+            <span class="kpi-label">RCA Rules</span>
+            <strong id="rulebookRcaCount">Not generated yet</strong>
+            <p>Transparent review drivers</p>
+          </article>
+
+          <article class="rulebook-summary-card">
+            <span class="kpi-label">Rule Source</span>
+            <strong id="rulebookSourceType">YAML configuration</strong>
+            <p id="rulebookSourceFiles">config/spec_requirements.yaml, config/rca_rules.yaml</p>
+          </article>
+        </div>
+
+        <div class="rulebook-tables">
+          <article class="rulebook-panel">
+            <h3>Specification Requirements</h3>
+            <div class="rulebook-table-wrap">
+              <table class="rulebook-table">
+                <thead>
+                  <tr>
+                    <th>Check</th>
+                    <th>Signal</th>
+                    <th>Condition</th>
+                    <th>Severity</th>
+                    <th>Recommended action</th>
+                  </tr>
+                </thead>
+                <tbody id="specRulebookTable"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="rulebook-panel">
+            <h3>RCA Rules</h3>
+            <div class="rulebook-table-wrap">
+              <table class="rulebook-table">
+                <thead>
+                  <tr>
+                    <th>Rule</th>
+                    <th>Trigger / condition</th>
+                    <th>Severity</th>
+                    <th>Possible cause</th>
+                    <th>Recommended action</th>
+                  </tr>
+                </thead>
+                <tbody id="rcaRulebookTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+
+        <p class="prototype-note">
+          Prototype note: These rules are illustrative configuration examples for an industrial quality decision-support workflow. In a real deployment, limits and actions would be defined and validated by domain experts.
+        </p>
+      </section>
+
       <section class="case-trace-section">
         <div class="section-heading">
           <h2>Engineering Review Trace</h2>

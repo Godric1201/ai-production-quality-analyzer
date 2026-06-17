@@ -473,6 +473,102 @@ function renderWorkflowOverview(workflowOverview = {}) {
   }
 }
 
+function formatSeverityLabel(value) {
+  const label = formatValue(value, "Informational");
+  return formatEnumLabel(label);
+}
+
+function severityClass(value) {
+  const normalized = String(value || "").toLowerCase();
+  if (normalized === "critical") {
+    return "severity-critical";
+  }
+  if (normalized === "warning") {
+    return "severity-warning";
+  }
+  if (normalized === "monitoring") {
+    return "severity-monitoring";
+  }
+  return "severity-info";
+}
+
+function createSeverityBadge(value) {
+  const badge = document.createElement("span");
+  badge.className = `severity-badge ${severityClass(value)}`;
+  badge.textContent = formatSeverityLabel(value);
+  return badge;
+}
+
+function appendTextCell(row, value) {
+  const cell = document.createElement("td");
+  cell.textContent = formatValue(value, "Not specified");
+  row.appendChild(cell);
+}
+
+function appendSeverityCell(row, value) {
+  const cell = document.createElement("td");
+  cell.appendChild(createSeverityBadge(value));
+  row.appendChild(cell);
+}
+
+function renderRulebookTable(containerId, rows, columns) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  if (!rows || rows.length === 0) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = columns.length;
+    cell.textContent = "Rulebook data not generated yet.";
+    row.appendChild(cell);
+    container.appendChild(row);
+    return;
+  }
+
+  rows.forEach((item) => {
+    const row = document.createElement("tr");
+    columns.forEach((column) => {
+      if (column.type === "severity") {
+        appendSeverityCell(row, item[column.key]);
+      } else {
+        appendTextCell(row, item[column.key]);
+      }
+    });
+    container.appendChild(row);
+  });
+}
+
+function renderEngineeringRulebook(rulebook = {}) {
+  const summary = safeGet(rulebook, ["summary"], {});
+  const sourceFiles = safeGet(summary, ["source_files"], []);
+
+  setText("rulebookSpecCount", formatCount(safeGet(summary, ["spec_requirement_count"], null)));
+  setText("rulebookRcaCount", formatCount(safeGet(summary, ["rca_rule_count"], null)));
+  setText("rulebookSourceType", formatValue(safeGet(summary, ["source_type"], "YAML configuration")));
+  setText(
+    "rulebookSourceFiles",
+    Array.isArray(sourceFiles) && sourceFiles.length > 0
+      ? sourceFiles.join(", ")
+      : "config/spec_requirements.yaml, config/rca_rules.yaml"
+  );
+
+  renderRulebookTable("specRulebookTable", safeGet(rulebook, ["spec_requirements"], []), [
+    { key: "label" },
+    { key: "signal_label" },
+    { key: "condition" },
+    { key: "severity", type: "severity" },
+    { key: "recommended_action" },
+  ]);
+
+  renderRulebookTable("rcaRulebookTable", safeGet(rulebook, ["rca_rules"], []), [
+    { key: "label" },
+    { key: "condition" },
+    { key: "severity", type: "severity" },
+    { key: "possible_cause" },
+    { key: "recommended_action" },
+  ]);
+}
+
 function renderTraceList(containerId, items) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
@@ -1152,6 +1248,7 @@ async function loadDashboard() {
 
     renderKpis(data.kpis);
     renderWorkflowOverview(data.workflow_overview);
+    renderEngineeringRulebook(data.engineering_rulebook);
     renderCaseTrace(data.case_trace);
     renderRootCauseSummaryCards(data.prediction_results);
     renderCharts(data.charts);

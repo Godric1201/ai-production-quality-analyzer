@@ -1,8 +1,10 @@
 from pathlib import Path
 import json
+import re
 
 import joblib
 import pandas as pd
+import yaml
 
 from root_cause_analysis import analyze_root_causes
 from train_model import CATEGORICAL_FEATURES, MODEL_PATH, NUMERIC_FEATURES
@@ -20,6 +22,8 @@ DATA_QUALITY_REPORT_PATH = PROJECT_ROOT / "outputs" / "data_quality_report.json"
 BATCH_REVIEW_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "batch_review_summary.json"
 SPEC_COMPLIANCE_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "spec_compliance_summary.json"
 REVIEW_FEEDBACK_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "review_feedback_summary.json"
+RCA_RULES_CONFIG_PATH = PROJECT_ROOT / "config" / "rca_rules.yaml"
+SPEC_REQUIREMENTS_CONFIG_PATH = PROJECT_ROOT / "config" / "spec_requirements.yaml"
 BATCH_REVIEW_RESULTS_PATH = PROJECT_ROOT / "outputs" / "batch_review_results.csv"
 SPEC_COMPLIANCE_RESULTS_PATH = PROJECT_ROOT / "outputs" / "spec_compliance_results.csv"
 REVIEW_FEEDBACK_CASES_PATH = PROJECT_ROOT / "outputs" / "review_feedback_cases.csv"
@@ -179,6 +183,178 @@ def classify_predicted_risk(probability: float, threshold: float) -> str:
 def format_recommendations(recommendations: list[str]) -> str:
     """Format recommendation text for compact dataframe and JSON export."""
     return "; ".join(recommendations)
+
+
+def load_yaml(path: Path) -> dict:
+    """Load a YAML configuration file used as dashboard rulebook source."""
+    if not path.exists():
+        return {}
+
+    with open(path, "r", encoding="utf-8") as file:
+        return yaml.safe_load(file) or {}
+
+
+def format_requirement_label(value: str) -> str:
+    """Convert configured requirement identifiers into readable dashboard labels."""
+    if not value:
+        return "Not specified"
+
+    labels = {
+        "TEMP_MAX_WARNING": "Temperature warning",
+        "TEMP_MAX_CRITICAL": "Temperature critical",
+        "VIBRATION_MAX_WARNING": "Vibration warning",
+        "VIBRATION_MAX_CRITICAL": "Vibration critical",
+        "CYCLE_TIME_MAX_WARNING": "Cycle-time warning",
+        "CYCLE_TIME_MAX_CRITICAL": "Cycle-time critical",
+        "PRESSURE_MIN_WARNING": "Low pressure warning",
+        "PRESSURE_MAX_WARNING": "High pressure warning",
+        "HUMIDITY_MAX_WARNING": "Humidity warning",
+        "LOW_OPERATOR_EXPERIENCE_WARNING": "Operator support warning",
+    }
+    if value in labels:
+        return labels[value]
+
+    words = str(value).replace("_", " ").replace("-", " ").lower()
+    return re.sub(r"\b\w", lambda match: match.group(0).upper(), words)
+
+
+def format_signal_label(value: str) -> str:
+    """Convert input signal columns into readable engineering labels."""
+    if not value:
+        return "Not specified"
+
+    labels = {
+        "temperature_c": "Temperature",
+        "vibration_mm_s": "Vibration",
+        "cycle_time_s": "Cycle time",
+        "pressure_bar": "Pressure",
+        "humidity_percent": "Humidity",
+        "operator_experience_years": "Operator experience",
+        "machine_id": "Machine",
+        "shift": "Shift",
+        "material_batch": "Material batch",
+    }
+    if value in labels:
+        return labels[value]
+
+    words = str(value).replace("_", " ").replace("-", " ").lower()
+    return re.sub(r"\b\w", lambda match: match.group(0).upper(), words)
+
+
+def normalize_severity(value: str) -> str:
+    """Normalize rule severity labels for dashboard badges."""
+    if not value:
+        return "Informational"
+
+    severity = str(value).strip().lower()
+    mapping = {
+        "critical": "Critical",
+        "high": "Critical",
+        "warning": "Warning",
+        "medium": "Warning",
+        "monitoring": "Monitoring",
+        "low": "Monitoring",
+        "info": "Informational",
+        "informational": "Informational",
+    }
+    return mapping.get(severity, format_signal_label(severity))
+
+
+def format_signal_unit(value: str) -> str:
+    """Return compact display units for configured sensor columns."""
+    units = {
+        "temperature_c": "C",
+        "vibration_mm_s": "mm/s",
+        "cycle_time_s": "s",
+        "pressure_bar": "bar",
+        "humidity_percent": "%",
+        "operator_experience_years": "years",
+    }
+    return units.get(str(value), "")
+
+
+def format_condition_text(rule: dict) -> str:
+    """Build a compact readable trigger condition from a config rule."""
+    operator_value = rule.get("operator")
+    value = rule.get("value")
+    values = rule.get("values")
+
+    if operator_value and value is not None:
+        unit = format_signal_unit(rule.get("parameter") or rule.get("column"))
+        return f"{operator_value} {value}{f' {unit}' if unit else ''}"
+
+    if values:
+        if isinstance(values, list):
+            return "matches " + ", ".join(str(item) for item in values)
+        return f"matches {values}"
+
+    return rule.get("condition") or rule.get("evidence") or "Not specified"
+
+
+def build_engineering_rulebook() -> dict:
+    """Export configured engineering checks into dashboard-readable rows."""
+    spec_config = load_yaml(SPEC_REQUIREMENTS_CONFIG_PATH)
+    rca_config = load_yaml(RCA_RULES_CONFIG_PATH)
+    spec_requirements = spec_config.get("requirements", []) or []
+    rca_rules = rca_config.get("rules", []) or []
+
+    formatted_spec_requirements = []
+    for requirement in spec_requirements:
+        signal = requirement.get("parameter", "")
+        formatted_spec_requirements.append(
+            {
+                "id": requirement.get("id", "Not specified"),
+                "label": format_requirement_label(requirement.get("id", "")),
+                "category": format_signal_label(signal),
+                "signal": signal or "Not specified",
+                "signal_label": format_signal_label(signal),
+                "condition": format_condition_text(requirement),
+                "severity": normalize_severity(requirement.get("severity", "")),
+                "description": requirement.get("requirement_text", "Not specified"),
+                "rationale": requirement.get("engineering_rationale", "Not specified"),
+                "recommended_action": requirement.get(
+                    "recommended_action",
+                    "Not specified",
+                ),
+            }
+        )
+
+    formatted_rca_rules = []
+    for rule in rca_rules:
+        signal = rule.get("column", "")
+        formatted_rca_rules.append(
+            {
+                "id": rule.get("id", "Not specified"),
+                "label": rule.get("driver") or format_requirement_label(rule.get("id", "")),
+                "category": format_signal_label(signal),
+                "signal": signal or "Not specified",
+                "condition": format_condition_text(rule),
+                "severity": normalize_severity(rule.get("severity", "")),
+                "possible_cause": rule.get(
+                    "engineering_interpretation",
+                    "Not specified",
+                ),
+                "evidence": rule.get("evidence", "Not specified"),
+                "recommended_action": rule.get("recommendation", "Not specified"),
+            }
+        )
+
+    return {
+        "summary": {
+            "spec_requirement_count": len(formatted_spec_requirements),
+            "rca_rule_count": len(formatted_rca_rules),
+            "source_files": [
+                "config/spec_requirements.yaml",
+                "config/rca_rules.yaml",
+            ],
+            "source_type": "YAML configuration",
+            "note": (
+                "Rules are loaded from configuration files and used for decision support."
+            ),
+        },
+        "spec_requirements": formatted_spec_requirements,
+        "rca_rules": formatted_rca_rules,
+    }
 
 
 def analyze_prediction_row(row: pd.Series) -> pd.Series:
@@ -844,6 +1020,7 @@ def build_dashboard_data(
         "prediction_results": get_prediction_results_export(prediction_results),
         "sample_prediction": build_sample_prediction(prediction_results),
         "workflow_overview": build_workflow_overview(),
+        "engineering_rulebook": build_engineering_rulebook(),
         "case_trace": build_case_trace(),
     }
 
