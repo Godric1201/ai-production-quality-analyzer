@@ -12,6 +12,14 @@ This is an interview-ready portfolio prototype using a synthetic manufacturing d
 
 This project demonstrates how manufacturing quality data can be transformed into an engineering decision-support workflow. It validates production data, trains a scrap-risk early-warning model, evaluates threshold trade-offs, applies configurable RCA and specification rules, reviews new production batches, compares review decisions with later feedback, and exposes the workflow through a static dashboard.
 
+## Dashboard Preview
+
+![Dashboard overview](docs/screenshots/dashboard-overview.png)
+
+![High-risk RCA investigation table](docs/screenshots/rca-investigation-table.png)
+
+![Model threshold and cost analysis](docs/screenshots/model-threshold-cost.png)
+
 ## What This Project Demonstrates
 
 - Data quality validation before model training.
@@ -75,15 +83,15 @@ Dashboard + engineering review trace
 
 ## Repository Structure
 
-```text
-src/        Python pipeline scripts
-config/     YAML-based RCA and specification rules
-data/       Synthetic dataset and new batch examples
-outputs/    Generated reports, model outputs, and evaluation files
-dashboard/  Static dashboard files
-tests/      Verification scripts
-.github/    GitHub Pages deployment workflow
-```
+| Folder | Purpose |
+|---|---|
+| `src/` | Python pipeline scripts |
+| `config/` | YAML-based RCA and specification rules |
+| `data/` | Synthetic dataset and new batch examples |
+| `outputs/` | Generated reports, model outputs, and evaluation files |
+| `dashboard/` | Static dashboard files |
+| `tests/` | Verification scripts |
+| `.github/` | GitHub Pages deployment workflow |
 
 ## How to Run Locally
 
@@ -122,10 +130,10 @@ http://localhost:8000/dashboard/
 
 - Uses synthetic manufacturing data, not real factory data.
 - Rules and thresholds are illustrative.
-- The model is evaluated as an early-warning signal, not a final quality decision.
+- The model is evaluated as early-warning decision support, not final quality approval.
 - The system does not control production, certify parts, or replace engineers.
 - No real MES, SCADA, PLC, QMS, or shop-floor integration is included.
-- Not validated for real factory deployment or production readiness.
+- Not production-ready and not validated for real factory deployment.
 - A real deployment would require domain expert validation, real production data, governance, monitoring, and integration with shop-floor systems.
 
 ## Relevance to Industrial AI

@@ -17,6 +17,7 @@ def test_readme_contains_portfolio_positioning() -> None:
 
     for expected in [
         "https://godric1201.github.io/ai-production-quality-analyzer/",
+        "dashboard preview",
         "synthetic manufacturing dataset",
         "decision-support",
         "configurable engineering rulebook",
@@ -27,15 +28,29 @@ def test_readme_contains_portfolio_positioning() -> None:
         assert expected in readme, f"{expected} missing from README.md."
 
 
+def test_readme_contains_dashboard_visuals_or_placeholder() -> None:
+    readme = read_readme()
+    has_markdown_image = "![" in readme and "](" in readme
+    has_screenshot_placeholder = "screenshot" in readme and (
+        "todo" in readme or "placeholder" in readme or "should be added" in readme
+    )
+
+    assert (
+        has_markdown_image or has_screenshot_placeholder
+    ), "README.md should include dashboard images or a clear screenshot placeholder."
+
+
 def test_readme_is_honest_about_limitations() -> None:
     readme = read_readme()
 
     for expected in [
         "limitations",
         "not real factory data",
-        "not a final quality decision",
+        "not final quality approval",
         "not validated for real factory deployment",
-        "production readiness",
+        "not production-ready",
+        "domain expert validation",
+        "real production data",
     ]:
         assert expected in readme, f"{expected} missing from README.md limitations."
 
@@ -57,6 +72,7 @@ def test_readme_describes_industrial_ai_workflow() -> None:
 def main() -> None:
     tests = [
         test_readme_contains_portfolio_positioning,
+        test_readme_contains_dashboard_visuals_or_placeholder,
         test_readme_is_honest_about_limitations,
         test_readme_describes_industrial_ai_workflow,
     ]
