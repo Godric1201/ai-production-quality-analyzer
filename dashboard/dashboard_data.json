@@ -683,5 +683,60 @@
       "Inspect M2 calibration, maintenance status, and recent quality history.",
       "Apply additional process checks during night shift production."
     ]
+  },
+  "workflow_overview": {
+    "data_quality": {
+      "status": "PASS",
+      "row_count": 5000,
+      "column_count": 11,
+      "warning_count": 0,
+      "error_count": 0,
+      "scrap_rate": 0.0716
+    },
+    "batch_review": {
+      "status": "available",
+      "row_count": 10,
+      "review_threshold": 0.4,
+      "decision_counts": {
+        "ENGINEERING_REVIEW_REQUIRED": 4,
+        "ADDITIONAL_MONITORING": 1,
+        "STANDARD_MONITORING": 5
+      },
+      "risk_level_counts": {
+        "High": 1,
+        "Low": 5,
+        "Medium": 4
+      }
+    },
+    "spec_compliance": {
+      "status": "available",
+      "row_count": 10,
+      "requirement_count": 10,
+      "status_counts": {
+        "COMPLIANT": 5,
+        "WARNING_VIOLATION": 4,
+        "CRITICAL_VIOLATION": 1
+      },
+      "most_common_violated_requirement": {
+        "requirement_id": "CYCLE_TIME_MAX_WARNING",
+        "parameter": "cycle_time_s",
+        "severity": "warning",
+        "count": 4
+      }
+    },
+    "feedback_loop": {
+      "status": "available",
+      "row_count": 10,
+      "issue_capture_rate": 0.75,
+      "false_alarm_rate_among_reviews": 0.25,
+      "missed_issue_count": 1,
+      "false_alarm_count": 1,
+      "classification_counts": {
+        "FALSE_ALARM_REVIEW": 1,
+        "MISSED_ISSUE": 1,
+        "TRUE_NEGATIVE_MONITORING": 5,
+        "TRUE_POSITIVE_REVIEW": 3
+      }
+    }
   }
 }

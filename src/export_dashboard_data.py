@@ -16,6 +16,10 @@ FEATURE_IMPORTANCE_PATH = PROJECT_ROOT / "outputs" / "feature_importance.csv"
 SELECTED_THRESHOLD_PATH = PROJECT_ROOT / "outputs" / "selected_threshold.json"
 THRESHOLD_METRICS_PATH = PROJECT_ROOT / "outputs" / "threshold_metrics.csv"
 COST_OPTIMIZATION_PATH = PROJECT_ROOT / "outputs" / "cost_optimized_threshold.json"
+DATA_QUALITY_REPORT_PATH = PROJECT_ROOT / "outputs" / "data_quality_report.json"
+BATCH_REVIEW_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "batch_review_summary.json"
+SPEC_COMPLIANCE_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "spec_compliance_summary.json"
+REVIEW_FEEDBACK_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "review_feedback_summary.json"
 DASHBOARD_DATA_PATH = PROJECT_ROOT / "dashboard" / "dashboard_data.json"
 PREDICTION_RESULTS_PATH = PROJECT_ROOT / "outputs" / "prediction_results.csv"
 FEATURE_COLUMNS = CATEGORICAL_FEATURES + NUMERIC_FEATURES
@@ -25,6 +29,18 @@ def load_json(path: Path) -> dict:
     """Load a JSON file."""
     if not path.exists():
         raise FileNotFoundError(f"Required file not found: {path}")
+
+    with open(path, "r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def load_optional_json(path: Path) -> dict:
+    """Load an optional JSON output for dashboard summary cards."""
+    if not path.exists():
+        return {
+            "status": "missing",
+            "message": "Output not generated yet.",
+        }
 
     with open(path, "r", encoding="utf-8") as file:
         return json.load(file)
@@ -347,6 +363,106 @@ def build_cost_optimization_summary(cost_optimization: dict) -> dict:
     }
 
 
+def missing_workflow_card() -> dict:
+    """Return a safe placeholder for workflow outputs not generated yet."""
+    return {
+        "status": "missing",
+        "message": "Output not generated yet.",
+    }
+
+
+def build_data_quality_overview() -> dict:
+    """Build a compact dashboard summary for the data quality layer."""
+    report = load_optional_json(DATA_QUALITY_REPORT_PATH)
+    if report.get("status") == "missing":
+        return missing_workflow_card()
+
+    target_summary = report.get("target_summary", {})
+    return {
+        "status": report.get("status", "unknown"),
+        "row_count": report.get("row_count"),
+        "column_count": report.get("column_count"),
+        "warning_count": len(report.get("warnings", [])),
+        "error_count": len(report.get("errors", [])),
+        "scrap_rate": target_summary.get("scrap_rate"),
+    }
+
+
+def build_batch_review_overview() -> dict:
+    """Build a compact dashboard summary for new-batch review routing."""
+    summary = load_optional_json(BATCH_REVIEW_SUMMARY_PATH)
+    if summary.get("status") == "missing":
+        return missing_workflow_card()
+
+    decision_counts = summary.get("decision_counts", {})
+    return {
+        "status": "available",
+        "row_count": summary.get("row_count"),
+        "review_threshold": summary.get("review_threshold"),
+        "decision_counts": {
+            "ENGINEERING_REVIEW_REQUIRED": decision_counts.get(
+                "ENGINEERING_REVIEW_REQUIRED",
+                0,
+            ),
+            "ADDITIONAL_MONITORING": decision_counts.get("ADDITIONAL_MONITORING", 0),
+            "STANDARD_MONITORING": decision_counts.get("STANDARD_MONITORING", 0),
+        },
+        "risk_level_counts": summary.get("risk_level_counts", {}),
+    }
+
+
+def build_spec_compliance_overview() -> dict:
+    """Build a compact dashboard summary for specification compliance checks."""
+    summary = load_optional_json(SPEC_COMPLIANCE_SUMMARY_PATH)
+    if summary.get("status") == "missing":
+        return missing_workflow_card()
+
+    status_counts = summary.get("status_counts", {})
+    violated_requirements = summary.get("violation_counts_by_requirement", [])
+    most_common = violated_requirements[0] if violated_requirements else None
+    return {
+        "status": "available",
+        "row_count": summary.get("row_count"),
+        "requirement_count": summary.get("requirement_count"),
+        "status_counts": {
+            "COMPLIANT": status_counts.get("COMPLIANT", 0),
+            "WARNING_VIOLATION": status_counts.get("WARNING_VIOLATION", 0),
+            "CRITICAL_VIOLATION": status_counts.get("CRITICAL_VIOLATION", 0),
+        },
+        "most_common_violated_requirement": most_common,
+    }
+
+
+def build_feedback_loop_overview() -> dict:
+    """Build a compact dashboard summary for review feedback evaluation."""
+    summary = load_optional_json(REVIEW_FEEDBACK_SUMMARY_PATH)
+    if summary.get("status") == "missing":
+        return missing_workflow_card()
+
+    effectiveness = summary.get("review_effectiveness", {})
+    return {
+        "status": "available",
+        "row_count": summary.get("row_count"),
+        "issue_capture_rate": effectiveness.get("issue_capture_rate"),
+        "false_alarm_rate_among_reviews": effectiveness.get(
+            "false_alarm_rate_among_reviews"
+        ),
+        "missed_issue_count": effectiveness.get("missed_issue_count"),
+        "false_alarm_count": effectiveness.get("false_alarm_count"),
+        "classification_counts": summary.get("classification_counts", {}),
+    }
+
+
+def build_workflow_overview() -> dict:
+    """Build all workflow maturity summary cards for the static dashboard."""
+    return {
+        "data_quality": build_data_quality_overview(),
+        "batch_review": build_batch_review_overview(),
+        "spec_compliance": build_spec_compliance_overview(),
+        "feedback_loop": build_feedback_loop_overview(),
+    }
+
+
 def get_prediction_results_export(prediction_results: pd.DataFrame) -> list[dict]:
     """Return a compact high-risk prediction sample for JSON export."""
     export_columns = [
@@ -475,6 +591,7 @@ def build_dashboard_data(
         ),
         "prediction_results": get_prediction_results_export(prediction_results),
         "sample_prediction": build_sample_prediction(prediction_results),
+        "workflow_overview": build_workflow_overview(),
     }
 
     return dashboard_data
