@@ -122,14 +122,80 @@ function formatLimitedList(value, limit = 3, moreLabel = "more") {
   return visibleItems.join("\n");
 }
 
-function formatFirstListItem(value, moreLabel = "more") {
+function formatRequirementChips(value, limit = 3) {
+  const items = splitListText(value);
+  if (items.length === 0) {
+    return [];
+  }
+
+  const visibleItems = items.slice(0, limit);
+  const remainingCount = items.length - visibleItems.length;
+  return remainingCount > 0 ? [...visibleItems, `+${remainingCount} more`] : visibleItems;
+}
+
+function formatDriverChipText(value) {
+  const text = formatValue(value, "").trim();
+  if (!text) {
+    return "";
+  }
+
+  return truncateTraceText(text.replace(/\s+/g, " "), 28);
+}
+
+function formatDriverChips(value, limit = 3) {
+  return splitListText(value)
+    .slice(0, limit)
+    .map(formatDriverChipText)
+    .filter(Boolean);
+}
+
+function formatTraceActions(value, limit = 2) {
   const items = splitListText(value);
   if (items.length === 0) {
     return "None";
   }
 
-  const remainingCount = items.length - 1;
-  return remainingCount > 0 ? `${items[0]}\n+${remainingCount} ${moreLabel}` : items[0];
+  const visibleItems = items.slice(0, limit).map((item) => truncateTraceText(item, 86));
+  const remainingCount = items.length - visibleItems.length;
+
+  if (remainingCount > 0) {
+    visibleItems.push(`+${remainingCount} more actions`);
+  }
+
+  return visibleItems.join("\n");
+}
+
+function joinDisplayList(items) {
+  if (items.length <= 2) {
+    return items.join(" and ");
+  }
+
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+function formatViolationSummary(value) {
+  const text = formatValue(value, "").trim();
+  if (!text) {
+    return "None";
+  }
+
+  const checks = [
+    { pattern: /temperature/i, label: "temperature" },
+    { pattern: /vibration/i, label: "vibration" },
+    { pattern: /cycle[_\s-]*time/i, label: "cycle time" },
+    { pattern: /pressure/i, label: "pressure" },
+    { pattern: /humidity/i, label: "humidity" },
+    { pattern: /operator/i, label: "operator experience" },
+  ];
+  const affectedAreas = checks
+    .filter((check) => check.pattern.test(text))
+    .map((check) => check.label);
+
+  if (affectedAreas.length > 0) {
+    return `${joinDisplayList(affectedAreas)} fell outside configured process limits.`;
+  }
+
+  return truncateTraceText(text, 150);
 }
 
 function truncateTraceText(value, maxLength) {
@@ -465,7 +531,7 @@ function renderCaseTrace(caseTrace = {}) {
     },
     {
       label: "Top drivers",
-      chips: splitListText(safeGet(rca, ["top_suspected_drivers"], "")).slice(0, 3),
+      chips: formatDriverChips(safeGet(rca, ["top_suspected_drivers"], ""), 3),
       value: "Not generated yet",
     },
   ]);
@@ -477,15 +543,16 @@ function renderCaseTrace(caseTrace = {}) {
     },
     {
       label: "Violated requirements",
-      value: formatLimitedList(safeGet(spec, ["violated_requirement_ids"], ""), 3, "more"),
+      chips: formatRequirementChips(safeGet(spec, ["violated_requirement_ids"], ""), 3),
+      value: "None",
     },
     {
       label: "Violation summary",
-      value: truncateTraceText(safeGet(spec, ["violation_summary"], "None"), 180),
+      value: formatViolationSummary(safeGet(spec, ["violation_summary"], "None")),
     },
     {
       label: "Recommended actions",
-      value: formatFirstListItem(safeGet(spec, ["recommended_actions"], ""), "more actions"),
+      value: formatTraceActions(safeGet(spec, ["recommended_actions"], ""), 2),
     },
   ]);
 
@@ -508,7 +575,7 @@ function renderCaseTrace(caseTrace = {}) {
     },
   ]);
 
-  setText("traceSummary", truncateTraceText(caseTrace.trace_summary, 260));
+  setText("traceSummary", truncateTraceText(caseTrace.trace_summary, 520));
 }
 
 function renderRecommendations(recommendations) {
