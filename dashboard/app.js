@@ -499,14 +499,22 @@ function createSeverityBadge(value) {
   return badge;
 }
 
-function appendTextCell(row, value) {
+function labelCell(cell, label) {
+  if (label) {
+    cell.dataset.label = label;
+  }
+}
+
+function appendTextCell(row, value, label) {
   const cell = document.createElement("td");
+  labelCell(cell, label);
   cell.textContent = formatValue(value, "Not specified");
   row.appendChild(cell);
 }
 
-function appendSeverityCell(row, value) {
+function appendSeverityCell(row, value, label) {
   const cell = document.createElement("td");
+  labelCell(cell, label);
   cell.appendChild(createSeverityBadge(value));
   row.appendChild(cell);
 }
@@ -529,9 +537,9 @@ function renderRulebookTable(containerId, rows, columns) {
     const row = document.createElement("tr");
     columns.forEach((column) => {
       if (column.type === "severity") {
-        appendSeverityCell(row, item[column.key]);
+        appendSeverityCell(row, item[column.key], column.label);
       } else {
-        appendTextCell(row, item[column.key]);
+        appendTextCell(row, item[column.key], column.label);
       }
     });
     container.appendChild(row);
@@ -553,19 +561,19 @@ function renderEngineeringRulebook(rulebook = {}) {
   );
 
   renderRulebookTable("specRulebookTable", safeGet(rulebook, ["spec_requirements"], []), [
-    { key: "label" },
-    { key: "signal_label" },
-    { key: "condition" },
-    { key: "severity", type: "severity" },
-    { key: "recommended_action" },
+    { key: "label", label: "Check" },
+    { key: "signal_label", label: "Signal" },
+    { key: "condition", label: "Condition" },
+    { key: "severity", label: "Severity", type: "severity" },
+    { key: "recommended_action", label: "Recommended action" },
   ]);
 
   renderRulebookTable("rcaRulebookTable", safeGet(rulebook, ["rca_rules"], []), [
-    { key: "label" },
-    { key: "condition" },
-    { key: "severity", type: "severity" },
-    { key: "possible_cause" },
-    { key: "recommended_action" },
+    { key: "label", label: "Rule" },
+    { key: "condition", label: "Trigger / condition" },
+    { key: "severity", label: "Severity", type: "severity" },
+    { key: "possible_cause", label: "Possible cause" },
+    { key: "recommended_action", label: "Recommended action" },
   ]);
 }
 
@@ -595,8 +603,9 @@ function formatModelRole(value) {
   return formatEnumLabel(value);
 }
 
-function appendEvaluationCell(row, value) {
+function appendEvaluationCell(row, value, label) {
   const cell = document.createElement("td");
+  labelCell(cell, label);
   cell.textContent = value;
   row.appendChild(cell);
 }
@@ -618,7 +627,7 @@ function renderEvaluationTable(containerId, rows, columns, emptyText) {
   rows.forEach((item) => {
     const row = document.createElement("tr");
     columns.forEach((column) => {
-      appendEvaluationCell(row, column.format(item[column.key], item));
+      appendEvaluationCell(row, column.format(item[column.key], item), column.label);
     });
     container.appendChild(row);
   });
@@ -639,11 +648,19 @@ function renderModelEvaluation(modelEvaluation = {}) {
     "riskBandTable",
     safeGet(modelEvaluation, ["risk_bands"], []),
     [
-      { key: "risk_band", format: (value) => formatValue(value) },
-      { key: "row_count", format: (value) => formatCount(value) },
-      { key: "actual_scrap_rate", format: (value) => formatFractionPercent(value) },
-      { key: "average_predicted_risk", format: (value) => formatFractionPercent(value) },
-      { key: "review_priority", format: (value) => formatValue(value) },
+      { key: "risk_band", label: "Risk band", format: (value) => formatValue(value) },
+      { key: "row_count", label: "Rows", format: (value) => formatCount(value) },
+      {
+        key: "actual_scrap_rate",
+        label: "Actual scrap rate",
+        format: (value) => formatFractionPercent(value),
+      },
+      {
+        key: "average_predicted_risk",
+        label: "Average predicted risk",
+        format: (value) => formatFractionPercent(value),
+      },
+      { key: "review_priority", label: "Review priority", format: (value) => formatValue(value) },
     ],
     "Risk band evaluation not generated yet."
   );
@@ -652,11 +669,11 @@ function renderModelEvaluation(modelEvaluation = {}) {
     "thresholdTradeoffTable",
     safeGet(modelEvaluation, ["threshold_tradeoff"], []),
     [
-      { key: "threshold", format: (value) => formatMetric(value, 2) },
-      { key: "recall", format: (value) => formatFractionPercent(value) },
-      { key: "false_positive", format: (value) => formatCount(value) },
-      { key: "false_negative", format: (value) => formatCount(value) },
-      { key: "total_cost", format: (value) => formatNumber(Number(value)) },
+      { key: "threshold", label: "Threshold", format: (value) => formatMetric(value, 2) },
+      { key: "recall", label: "Recall", format: (value) => formatFractionPercent(value) },
+      { key: "false_positive", label: "False positives", format: (value) => formatCount(value) },
+      { key: "false_negative", label: "False negatives", format: (value) => formatCount(value) },
+      { key: "total_cost", label: "Total cost", format: (value) => formatNumber(Number(value)) },
     ],
     "Threshold trade-off data not generated yet."
   );
@@ -1128,18 +1145,22 @@ function renderRootCauseTable(predictionResults = []) {
     }
 
     const partCell = document.createElement("td");
+    labelCell(partCell, "Part ID");
     partCell.textContent = result.part_id || "N/A";
 
     const probabilityCell = document.createElement("td");
+    labelCell(probabilityCell, "Scrap probability");
     probabilityCell.textContent = formatPredictionProbability(result.scrap_probability);
 
     const riskCell = document.createElement("td");
+    labelCell(riskCell, "Risk");
     const riskBadge = document.createElement("span");
     riskBadge.className = "rca-risk";
     riskBadge.textContent = result.predicted_scrap_risk || "N/A";
     riskCell.appendChild(riskBadge);
 
     const summaryCell = document.createElement("td");
+    labelCell(summaryCell, "Root cause summary");
     summaryCell.className = "rca-summary-cell";
     summaryCell.textContent = truncateText(
       result.root_cause_summary || "No root cause summary available.",
@@ -1147,6 +1168,7 @@ function renderRootCauseTable(predictionResults = []) {
     );
 
     const recommendationCell = document.createElement("td");
+    labelCell(recommendationCell, "Action preview");
     recommendationCell.className = "rca-action-cell";
     if (recommendations.length > 0) {
       const preview = document.createElement("span");
