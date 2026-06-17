@@ -569,6 +569,99 @@ function renderEngineeringRulebook(rulebook = {}) {
   ]);
 }
 
+function formatMetric(value, digits = 3) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return "Not generated yet";
+  }
+
+  return numericValue.toFixed(digits);
+}
+
+function formatFractionPercent(value) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return "Not generated yet";
+  }
+
+  return formatPercent(numericValue * 100);
+}
+
+function formatModelRole(value) {
+  if (value === "early_warning_decision_support") {
+    return "Early-warning decision support";
+  }
+
+  return formatEnumLabel(value);
+}
+
+function appendEvaluationCell(row, value) {
+  const cell = document.createElement("td");
+  cell.textContent = value;
+  row.appendChild(cell);
+}
+
+function renderEvaluationTable(containerId, rows, columns, emptyText) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = columns.length;
+    cell.textContent = emptyText;
+    row.appendChild(cell);
+    container.appendChild(row);
+    return;
+  }
+
+  rows.forEach((item) => {
+    const row = document.createElement("tr");
+    columns.forEach((column) => {
+      appendEvaluationCell(row, column.format(item[column.key], item));
+    });
+    container.appendChild(row);
+  });
+}
+
+function renderModelEvaluation(modelEvaluation = {}) {
+  const summary = safeGet(modelEvaluation, ["summary"], {});
+
+  setText("modelEvalRocAuc", formatMetric(safeGet(summary, ["roc_auc"], null)));
+  setText("modelEvalPrAuc", formatMetric(safeGet(summary, ["pr_auc"], null)));
+  setText(
+    "modelEvalBaselineRate",
+    formatFractionPercent(safeGet(summary, ["baseline_scrap_rate"], null))
+  );
+  setText("modelEvalRole", formatModelRole(safeGet(summary, ["model_role"], null)));
+
+  renderEvaluationTable(
+    "riskBandTable",
+    safeGet(modelEvaluation, ["risk_bands"], []),
+    [
+      { key: "risk_band", format: (value) => formatValue(value) },
+      { key: "row_count", format: (value) => formatCount(value) },
+      { key: "actual_scrap_rate", format: (value) => formatFractionPercent(value) },
+      { key: "average_predicted_risk", format: (value) => formatFractionPercent(value) },
+      { key: "review_priority", format: (value) => formatValue(value) },
+    ],
+    "Risk band evaluation not generated yet."
+  );
+
+  renderEvaluationTable(
+    "thresholdTradeoffTable",
+    safeGet(modelEvaluation, ["threshold_tradeoff"], []),
+    [
+      { key: "threshold", format: (value) => formatMetric(value, 2) },
+      { key: "recall", format: (value) => formatFractionPercent(value) },
+      { key: "false_positive", format: (value) => formatCount(value) },
+      { key: "false_negative", format: (value) => formatCount(value) },
+      { key: "total_cost", format: (value) => formatNumber(Number(value)) },
+    ],
+    "Threshold trade-off data not generated yet."
+  );
+}
+
 function renderTraceList(containerId, items) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
@@ -1249,6 +1342,7 @@ async function loadDashboard() {
     renderKpis(data.kpis);
     renderWorkflowOverview(data.workflow_overview);
     renderEngineeringRulebook(data.engineering_rulebook);
+    renderModelEvaluation(data.model_evaluation);
     renderCaseTrace(data.case_trace);
     renderRootCauseSummaryCards(data.prediction_results);
     renderCharts(data.charts);

@@ -1,0 +1,4 @@
+risk_band,row_count,actual_scrap_count,actual_scrap_rate,average_predicted_risk,review_priority
+Low risk,659,23,0.0349,0.2443,Standard monitoring
+Medium risk,463,40,0.0864,0.372,Additional monitoring
+High risk,128,26,0.2031,0.569,Engineering review priority

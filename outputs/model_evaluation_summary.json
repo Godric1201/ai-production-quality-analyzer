@@ -1,0 +1,9 @@
+{
+  "roc_auc": 0.7129,
+  "pr_auc": 0.2099,
+  "baseline_scrap_rate": 0.0712,
+  "selected_threshold": 0.3,
+  "cost_optimized_threshold": 0.4,
+  "model_role": "early_warning_decision_support",
+  "interpretation": "The model is useful as an early-warning signal for engineering review, but its precision and recall trade-offs mean it should not be treated as an autonomous release or certification decision."
+}

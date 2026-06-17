@@ -17,7 +17,10 @@ METRICS_PATH = PROJECT_ROOT / "outputs" / "model_metrics.json"
 FEATURE_IMPORTANCE_PATH = PROJECT_ROOT / "outputs" / "feature_importance.csv"
 SELECTED_THRESHOLD_PATH = PROJECT_ROOT / "outputs" / "selected_threshold.json"
 THRESHOLD_METRICS_PATH = PROJECT_ROOT / "outputs" / "threshold_metrics.csv"
+THRESHOLD_COST_ANALYSIS_PATH = PROJECT_ROOT / "outputs" / "threshold_cost_analysis.csv"
 COST_OPTIMIZATION_PATH = PROJECT_ROOT / "outputs" / "cost_optimized_threshold.json"
+MODEL_EVALUATION_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "model_evaluation_summary.json"
+RISK_BAND_EVALUATION_PATH = PROJECT_ROOT / "outputs" / "risk_band_evaluation.csv"
 DATA_QUALITY_REPORT_PATH = PROJECT_ROOT / "outputs" / "data_quality_report.json"
 BATCH_REVIEW_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "batch_review_summary.json"
 SPEC_COMPLIANCE_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "spec_compliance_summary.json"
@@ -354,6 +357,67 @@ def build_engineering_rulebook() -> dict:
         },
         "spec_requirements": formatted_spec_requirements,
         "rca_rules": formatted_rca_rules,
+    }
+
+
+def load_optional_csv(path: Path) -> pd.DataFrame:
+    """Load an optional CSV output, returning an empty frame if unavailable."""
+    if not path.exists():
+        return pd.DataFrame()
+
+    return pd.read_csv(path)
+
+
+def dataframe_records(df: pd.DataFrame) -> list[dict]:
+    """Convert a dataframe to JSON-safe records."""
+    return [
+        {
+            column: clean_value(row[column])
+            for column in df.columns
+        }
+        for _, row in df.iterrows()
+    ]
+
+
+def build_threshold_tradeoff(limit: int = 5) -> list[dict]:
+    """Export compact threshold trade-off rows sorted by total cost."""
+    threshold_df = load_optional_csv(THRESHOLD_COST_ANALYSIS_PATH)
+    required_columns = [
+        "threshold",
+        "recall",
+        "false_positive",
+        "false_negative",
+        "total_cost",
+    ]
+    if threshold_df.empty or any(column not in threshold_df.columns for column in required_columns):
+        return []
+
+    threshold_df = threshold_df.sort_values("total_cost").head(limit)
+    return [
+        {
+            "threshold": round(float(row["threshold"]), 2),
+            "recall": round(float(row["recall"]), 4),
+            "false_positive": int(row["false_positive"]),
+            "false_negative": int(row["false_negative"]),
+            "total_cost": round(float(row["total_cost"]), 2),
+        }
+        for _, row in threshold_df.iterrows()
+    ]
+
+
+def build_model_evaluation() -> dict:
+    """Build model evaluation and risk-band data for the dashboard."""
+    summary = load_optional_json(MODEL_EVALUATION_SUMMARY_PATH)
+    if summary.get("status") == "missing":
+        summary = {}
+
+    risk_band_df = load_optional_csv(RISK_BAND_EVALUATION_PATH)
+    risk_bands = dataframe_records(risk_band_df) if not risk_band_df.empty else []
+
+    return {
+        "summary": summary,
+        "risk_bands": risk_bands,
+        "threshold_tradeoff": build_threshold_tradeoff(),
     }
 
 
@@ -1021,6 +1085,7 @@ def build_dashboard_data(
         "sample_prediction": build_sample_prediction(prediction_results),
         "workflow_overview": build_workflow_overview(),
         "engineering_rulebook": build_engineering_rulebook(),
+        "model_evaluation": build_model_evaluation(),
         "case_trace": build_case_trace(),
     }
 

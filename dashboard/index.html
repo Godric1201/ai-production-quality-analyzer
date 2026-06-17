@@ -159,6 +159,83 @@
         </p>
       </section>
 
+      <section class="model-evaluation-section">
+        <div class="section-heading">
+          <h2>Model Evaluation &amp; Risk Bands</h2>
+          <p>
+            Model scores are evaluated as review-routing signals, with risk bands and threshold trade-offs made visible for engineering decision support.
+          </p>
+        </div>
+
+        <div class="model-evaluation-summary-grid">
+          <article class="model-evaluation-card">
+            <span class="kpi-label">ROC-AUC</span>
+            <strong id="modelEvalRocAuc">Not generated yet</strong>
+            <p>Ranking quality across scrap and non-scrap outcomes</p>
+          </article>
+
+          <article class="model-evaluation-card">
+            <span class="kpi-label">PR-AUC</span>
+            <strong id="modelEvalPrAuc">Not generated yet</strong>
+            <p>Precision-recall performance for scrap detection</p>
+          </article>
+
+          <article class="model-evaluation-card">
+            <span class="kpi-label">Baseline Scrap Rate</span>
+            <strong id="modelEvalBaselineRate">Not generated yet</strong>
+            <p>Observed scrap rate in the held-out evaluation split</p>
+          </article>
+
+          <article class="model-evaluation-card">
+            <span class="kpi-label">Model Role</span>
+            <strong id="modelEvalRole">Not generated yet</strong>
+            <p>Intended use in the quality review workflow</p>
+          </article>
+        </div>
+
+        <div class="evaluation-tables">
+          <article class="evaluation-panel">
+            <h3>Risk Bands</h3>
+            <div class="evaluation-table-wrap">
+              <table class="evaluation-table">
+                <thead>
+                  <tr>
+                    <th>Risk band</th>
+                    <th>Rows</th>
+                    <th>Actual scrap rate</th>
+                    <th>Average predicted risk</th>
+                    <th>Review priority</th>
+                  </tr>
+                </thead>
+                <tbody id="riskBandTable"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="evaluation-panel">
+            <h3>Threshold Trade-off</h3>
+            <div class="evaluation-table-wrap">
+              <table class="evaluation-table">
+                <thead>
+                  <tr>
+                    <th>Threshold</th>
+                    <th>Recall</th>
+                    <th>False positives</th>
+                    <th>False negatives</th>
+                    <th>Total cost</th>
+                  </tr>
+                </thead>
+                <tbody id="thresholdTradeoffTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+
+        <p class="prototype-note">
+          Prototype note: The model is evaluated as an early-warning signal for engineering review. It is not a validated production release or certification model.
+        </p>
+      </section>
+
       <section class="case-trace-section">
         <div class="section-heading">
           <h2>Engineering Review Trace</h2>

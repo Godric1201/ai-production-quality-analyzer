@@ -387,6 +387,98 @@ h1 {
   line-height: 1.5;
 }
 
+.model-evaluation-section {
+  margin-bottom: 16px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(17, 24, 39, 0.76);
+  box-shadow: var(--shadow);
+}
+
+.model-evaluation-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.model-evaluation-card,
+.evaluation-panel {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(31, 41, 55, 0.48);
+}
+
+.model-evaluation-card {
+  min-height: 148px;
+  padding: 16px;
+}
+
+.model-evaluation-card strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--text);
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+
+.model-evaluation-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.evaluation-tables {
+  display: grid;
+  gap: 16px;
+}
+
+.evaluation-panel {
+  padding: 16px;
+}
+
+.evaluation-panel h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+
+.evaluation-table-wrap {
+  overflow-x: auto;
+}
+
+.evaluation-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.evaluation-table th,
+.evaluation-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  text-align: left;
+  vertical-align: top;
+}
+
+.evaluation-table th {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.evaluation-table td {
+  color: var(--text);
+  font-size: 0.86rem;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
 .case-trace-section {
   margin-bottom: 16px;
   padding: 22px;
@@ -1092,6 +1184,7 @@ canvas {
   .rca-summary-grid,
   .workflow-overview-grid,
   .rulebook-summary-grid,
+  .model-evaluation-summary-grid,
   .case-trace-header,
   .case-trace-grid,
   .dashboard-grid {
