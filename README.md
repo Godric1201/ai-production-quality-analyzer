@@ -1,254 +1,135 @@
 # AI Production Quality Analyzer
 
-AI-assisted manufacturing quality analytics dashboard for scrap prediction, root cause investigation, and engineering action recommendations.
+Industrial quality decision-support prototype for manufacturing data validation, scrap-risk prediction, engineering rule checks, and review traceability.
 
-This is a portfolio project for AI, engineering, manufacturing digitalization, process engineering, and technical operations roles. It uses synthetic manufacturing data to demonstrate an end-to-end quality analytics workflow. It is not a production factory system.
+Live dashboard demo: https://godric1201.github.io/ai-production-quality-analyzer/
 
-## Problem
+Built with Python, pandas, scikit-learn, YAML-based engineering rules, and a static HTML/CSS/JS dashboard.
 
-Manufacturing teams need to identify high-risk production batches, understand process drivers, and prioritize engineering actions before quality losses become expensive. Traditional dashboards often show scrap rates after the fact, but teams also need early-warning indicators, root cause context, and action-oriented recommendations.
+This is an interview-ready portfolio prototype using a synthetic manufacturing dataset. It is not a validated production factory AI system.
 
-This project shows how a lightweight AI-assisted workflow can support that decision process.
+## Project Summary
 
-## What This Project Does
+This project demonstrates how manufacturing quality data can be transformed into an engineering decision-support workflow. It validates production data, trains a scrap-risk early-warning model, evaluates threshold trade-offs, applies configurable RCA and specification rules, reviews new production batches, compares review decisions with later feedback, and exposes the workflow through a static dashboard.
 
-- Predicts scrap risk for production records.
-- Analyzes process drivers such as vibration, cycle time, temperature, machine, shift, material batch, and operator experience.
-- Performs rule-based root cause analysis for elevated-risk predictions.
-- Generates engineering recommendations for high-risk batches.
-- Exports dashboard-ready JSON data.
-- Creates a Markdown quality report.
-- Supports RCA drill-down investigation in the dashboard.
-- Includes classification threshold tuning and cost-based decision reasoning.
+## What This Project Demonstrates
 
-## Dashboard Screenshots
+- Data quality validation before model training.
+- Tabular ML model for scrap-risk early warning.
+- Threshold tuning and cost-based trade-off reasoning.
+- Risk-band evaluation instead of blindly trusting accuracy.
+- Configurable engineering rulebook from YAML files.
+- Specification compliance checks.
+- Root cause analysis support.
+- Batch review workflow.
+- Feedback loop for missed issues and false alarms.
+- Traceable engineering review case in the dashboard.
 
-### Dashboard Overview
+## Dashboard Demo
 
-![Dashboard overview](docs/screenshots/dashboard-overview.png)
+Live demo: https://godric1201.github.io/ai-production-quality-analyzer/
 
-### RCA Investigation Table
+The dashboard is a static portfolio demo generated from repository outputs. It includes:
 
-![RCA investigation table](docs/screenshots/rca-investigation-table.png)
+1. Workflow Overview
+2. Engineering Rulebook / Configured Checks
+3. Model Evaluation & Risk Bands
+4. Engineering Review Trace
+5. High-Risk RCA / Recommendations
+6. Model performance and threshold analysis
 
-### Model Threshold and Cost View
+The public dashboard is deployed with GitHub Pages from generated dashboard files in the repository.
 
-![Model threshold and cost view](docs/screenshots/model-threshold-cost.png)
-
-## Core Workflow
+## Workflow Architecture
 
 ```text
-Synthetic Production Data
-  -> Feature Engineering
-  -> Scrap Risk Model
-  -> Root Cause Analysis
-  -> Engineering Recommendations
-  -> Dashboard + Markdown Report
+Synthetic production dataset
+        |
+        v
+Data validation
+        |
+        v
+Scrap-risk model training
+        |
+        v
+Model comparison + threshold tuning
+        |
+        v
+Cost-based threshold analysis
+        |
+        v
+Model evaluation + risk bands
+        |
+        v
+Batch review + RCA
+        |
+        v
+Specification compliance checks
+        |
+        v
+Feedback evaluation
+        |
+        v
+Dashboard + engineering review trace
 ```
-
-## Key Features
-
-- Synthetic manufacturing dataset with realistic quality-risk patterns.
-- Random Forest scrap-risk classifier for tabular production data.
-- Model comparison across Logistic Regression, Random Forest, and Gradient Boosting.
-- Feature importance analysis for process-driver interpretation.
-- Threshold tuning for early-warning quality monitoring.
-- Cost-based threshold analysis using missed-scrap and false-alarm assumptions.
-- Rule-based RCA module for manufacturing process conditions.
-- Dashboard RCA table with filtering, sorting, and drill-down side panel.
-- Markdown quality report with model, cost, process, RCA, and recommendation sections.
-- Static frontend built with HTML, CSS, JavaScript, and Chart.js.
-
-## Technical Stack
-
-| Area | Technology |
-| --- | --- |
-| Data processing | Python, pandas, NumPy |
-| Machine learning | scikit-learn |
-| Model persistence | joblib |
-| Dashboard | HTML, CSS, JavaScript |
-| Charts | Chart.js |
-| Report generation | Markdown |
-| Version control | Git |
 
 ## Repository Structure
 
 ```text
-ai-production-quality-analyzer/
-|-- data/
-|   `-- production_quality_data.csv
-|-- dashboard/
-|   |-- app.js
-|   |-- dashboard_data.json
-|   |-- index.html
-|   `-- style.css
-|-- docs/
-|   |-- dashboard-overview.png
-|   |-- dashboard-threshold.png
-|   `-- screenshots/
-|       `-- README.md
-|-- outputs/
-|   |-- best_model_summary.json
-|   |-- cost_optimized_threshold.json
-|   |-- feature_importance.csv
-|   |-- model_comparison.csv
-|   |-- model_metrics.json
-|   |-- prediction_results.csv
-|   |-- quality_report.md
-|   |-- scrap_prediction_model.joblib
-|   |-- selected_threshold.json
-|   |-- threshold_cost_analysis.csv
-|   `-- threshold_metrics.csv
-|-- src/
-|   |-- analyze_quality.py
-|   |-- compare_models.py
-|   |-- export_dashboard_data.py
-|   |-- generate_data.py
-|   |-- optimize_threshold_cost.py
-|   |-- predict_new_part.py
-|   |-- root_cause_analysis.py
-|   |-- run_pipeline.py
-|   |-- train_model.py
-|   `-- tune_threshold.py
-|-- requirements.txt
-`-- README.md
+src/        Python pipeline scripts
+config/     YAML-based RCA and specification rules
+data/       Synthetic dataset and new batch examples
+outputs/    Generated reports, model outputs, and evaluation files
+dashboard/  Static dashboard files
+tests/      Verification scripts
+.github/    GitHub Pages deployment workflow
 ```
 
-## How to Run
-
-### 1. Create a Virtual Environment
+## How to Run Locally
 
 Windows PowerShell:
 
-```powershell
+```bash
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.venv\Scripts\activate
+pip install -r requirements.txt
+python src/run_pipeline.py
+python -m http.server 8000
 ```
 
-macOS / Linux:
+macOS / Linux activation:
 
 ```bash
-python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 2. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Generate the Synthetic Dataset
-
-The repository includes a generated dataset, but it can be recreated with:
-
-```bash
-python src/generate_data.py
-```
-
-### 4. Run the Full Pipeline
-
-```bash
-python src/run_pipeline.py
-```
-
-This trains the model, compares classifiers, tunes thresholds, optimizes threshold cost, exports dashboard data, and generates the Markdown report.
-
-### 5. Open the Dashboard Locally
-
-From the repository root:
-
-```bash
-python -m http.server 8000
-```
-
-Then open:
+Open the local dashboard:
 
 ```text
 http://localhost:8000/dashboard/
 ```
 
-## Static Dashboard Demo
+## Key Outputs
 
-The dashboard can be run locally:
-
-```bash
-python src/run_pipeline.py
-python -m http.server 8000
-```
-
-Open:
-
-```text
-http://localhost:8000/dashboard/
-```
-
-The repository also includes a GitHub Pages workflow that deploys the static dashboard from the generated dashboard files as a static portfolio demo.
-
-Note: GitHub Pages must be enabled in the repository settings with GitHub Actions as the deployment source. The dashboard uses generated demonstration data and is not a validated production system.
-
-## Useful Individual Commands
-
-```bash
-python src/train_model.py
-python src/compare_models.py
-python src/tune_threshold.py
-python src/optimize_threshold_cost.py
-python src/export_dashboard_data.py
-python src/analyze_quality.py
-python src/predict_new_part.py
-```
-
-## Outputs
-
-Key generated outputs:
-
-- `outputs/quality_report.md` - automated quality analysis report with RCA and engineering actions.
-- `outputs/prediction_results.csv` - row-level predictions with RCA summaries and recommendation text.
-- `dashboard/dashboard_data.json` - dashboard-ready data payload used by the static frontend.
-
-Additional model and analysis outputs:
-
-- `outputs/model_metrics.json`
-- `outputs/model_comparison.csv`
-- `outputs/best_model_summary.json`
-- `outputs/feature_importance.csv`
-- `outputs/threshold_metrics.csv`
-- `outputs/selected_threshold.json`
-- `outputs/threshold_cost_analysis.csv`
-- `outputs/cost_optimized_threshold.json`
-- `outputs/scrap_prediction_model.joblib`
-
-## Model and Analytics Scope
-
-The model is intentionally used as an early-warning and decision-support workflow. It is not a final factory control system and should not be interpreted as an autonomous quality decision engine.
-
-The purpose is to show how manufacturing data can be transformed into:
-
-- Scrap-risk signals.
-- Process-driver interpretation.
-- Root cause investigation context.
-- Cost-sensitive threshold reasoning.
-- Engineering action recommendations.
-
-In a real manufacturing environment, this workflow would require validation with production data, process-owner review, integration with quality systems, and monitoring of false alarms and missed defects.
+- `outputs/data_quality_report.md`
+- `outputs/model_evaluation_report.md`
+- `outputs/batch_review_report.md`
+- `outputs/spec_compliance_report.md`
+- `outputs/review_feedback_report.md`
+- `dashboard/dashboard_data.json`
 
 ## Limitations
 
-- The dataset is synthetic and does not represent a specific factory, line, product, or supplier.
-- There is no live machine, PLC, sensor-stream, MES, ERP, or quality-management-system connection.
-- The RCA logic is deterministic and rule-based; it is designed for readability, not physical proof of causality.
-- Feature importance and RCA outputs are decision-support signals, not confirmed root causes.
-- Cost assumptions are illustrative and should be replaced with site-specific inspection, scrap, rework, and warranty costs.
-- Results are for demonstration and portfolio purposes.
+- Uses synthetic manufacturing data, not real factory data.
+- Rules and thresholds are illustrative.
+- The model is evaluated as an early-warning signal, not a final quality decision.
+- The system does not control production, certify parts, or replace engineers.
+- No real MES, SCADA, PLC, QMS, or shop-floor integration is included.
+- Not validated for real factory deployment or production readiness.
+- A real deployment would require domain expert validation, real production data, governance, monitoring, and integration with shop-floor systems.
 
-## Why This Project Matters
+## Relevance to Industrial AI
 
-Manufacturing teams increasingly need practical AI workflows that connect machine learning outputs with engineering decisions. This project demonstrates that bridge:
+This prototype focuses on the workflow around industrial AI, not just the model. It shows how engineering context, configurable rules, specification checks, feedback, and traceability can be combined into a decision-support system for manufacturing quality review.
 
-- Manufacturing analytics: turning production records into quality insight.
-- Process improvement: identifying recurring risk drivers such as vibration, cycle time, temperature, machine, material, and shift effects.
-- Cost-sensitive quality control: comparing threshold choices using operational cost assumptions.
-- AI-enabled operations: moving beyond predictions into root cause investigation and recommended actions.
-
-The result is a compact portfolio project that connects mechanical engineering, production quality, data science, and industrial digitalization.
+The project is relevant to industrial AI and engineering data roles because it connects model outputs with review routing, transparent rule checks, threshold trade-offs, and feedback evaluation rather than presenting prediction scores in isolation.
