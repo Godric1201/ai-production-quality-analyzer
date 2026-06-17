@@ -12,11 +12,20 @@
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
 }
 
-* {
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 body {
+  min-width: 0;
   margin: 0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
@@ -28,8 +37,41 @@ body {
 
 .page-shell {
   width: min(1440px, calc(100% - 48px));
+  max-width: 100%;
+  min-width: 0;
   margin: 0 auto;
   padding: 32px 0 56px;
+  overflow-x: clip;
+}
+
+main,
+section,
+article,
+.hero,
+.kpi-grid,
+.workflow-overview-grid,
+.rulebook-summary-grid,
+.rulebook-tables,
+.model-evaluation-summary-grid,
+.evaluation-tables,
+.case-trace-header,
+.case-trace-grid,
+.dashboard-grid,
+.insight-grid,
+.threshold-grid,
+.condition-grid,
+.metric-list,
+.workflow-card,
+.rulebook-summary-card,
+.rulebook-panel,
+.model-evaluation-card,
+.evaluation-panel,
+.case-trace-block,
+.chart-card,
+.insight-card,
+.rca-summary-card {
+  max-width: 100%;
+  min-width: 0;
 }
 
 .hero {
@@ -310,7 +352,19 @@ h1 {
 }
 
 .rulebook-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+}
+
+.table-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 .rulebook-table {
@@ -447,6 +501,9 @@ h1 {
 }
 
 .evaluation-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
 }
 
@@ -911,6 +968,9 @@ canvas {
 
 .rca-table-wrap {
   margin-top: 18px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
 }
 
@@ -1224,4 +1284,166 @@ canvas {
   width: 100%;
 }
 
+}
+
+@media (max-width: 700px) {
+  .page-shell {
+    width: min(100%, calc(100% - 24px));
+    padding: 18px 0 36px;
+  }
+
+  .hero,
+  .workflow-overview-section,
+  .rulebook-section,
+  .model-evaluation-section,
+  .case-trace-section,
+  .chart-card,
+  .insight-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .kpi-card,
+  .rca-summary-card,
+  .workflow-card,
+  .rulebook-summary-card,
+  .model-evaluation-card,
+  .rulebook-panel,
+  .evaluation-panel,
+  .case-trace-block {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .rulebook-table,
+  .evaluation-table,
+  .rca-table {
+    width: 100%;
+    min-width: 0;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+  }
+
+  .rulebook-table thead,
+  .evaluation-table thead,
+  .rca-table thead {
+    display: none;
+  }
+
+  .rulebook-table tbody,
+  .evaluation-table tbody,
+  .rca-table tbody {
+    display: block;
+  }
+
+  .rulebook-table tr,
+  .evaluation-table tr,
+  .rca-table tr {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 12px;
+    padding: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.38);
+  }
+
+  .rulebook-table td,
+  .evaluation-table td,
+  .rca-table td {
+    display: grid;
+    grid-template-columns: minmax(88px, 34%) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 7px 0;
+    border-bottom: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .rulebook-table td::before,
+  .evaluation-table td::before,
+  .rca-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.25;
+    text-transform: uppercase;
+  }
+
+  .rulebook-table td.empty-state,
+  .evaluation-table td.empty-state,
+  .rca-table td.empty-state {
+    display: block;
+  }
+
+  .rulebook-table td.empty-state::before,
+  .evaluation-table td.empty-state::before,
+  .rca-table td.empty-state::before {
+    content: "";
+  }
+
+  .severity-badge,
+  .rca-risk,
+  .risk-badge,
+  .threshold-pill,
+  .case-trace-header strong:not(#tracePartId) {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .rca-summary-cell,
+  .rca-action-cell {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .card-header,
+  .prediction-score,
+  .threshold-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .horizontal-metrics,
+  .condition-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-metrics div,
+  .metric-list div,
+  .threshold-grid div,
+  .prediction-score,
+  .threshold-pill {
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .prediction-score strong,
+  .kpi-card strong,
+  .rca-summary-card strong,
+  .model-evaluation-card strong,
+  .rulebook-summary-card strong {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .trace-metric-list .trace-chip,
+  .trace-metric-list .trace-chip-list {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  canvas {
+    max-width: 100%;
+  }
 }
