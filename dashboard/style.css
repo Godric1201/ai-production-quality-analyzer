@@ -176,6 +176,82 @@ h1 {
   color: var(--warning);
 }
 
+.workflow-overview-section {
+  margin-bottom: 16px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(17, 24, 39, 0.76);
+  box-shadow: var(--shadow);
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.section-heading p {
+  max-width: 660px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.workflow-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.workflow-card {
+  min-height: 210px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(31, 41, 55, 0.48);
+}
+
+.workflow-metrics {
+  display: grid;
+  gap: 8px;
+}
+
+.workflow-metrics div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  padding: 9px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.workflow-metrics span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.workflow-metrics strong {
+  color: var(--text);
+  font-size: 1rem;
+  text-align: right;
+}
+
+.workflow-card p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -726,8 +802,13 @@ canvas {
 
   .kpi-grid,
   .rca-summary-grid,
+  .workflow-overview-grid,
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+
+  .section-heading {
+    flex-direction: column;
   }
 
   .chart-card.wide {

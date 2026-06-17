@@ -23,11 +23,35 @@ function formatNumber(value) {
 }
 
 function formatPercent(value) {
-  return `${Number(value).toFixed(2)}%`;
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return "Not generated yet";
+  }
+
+  return `${numericValue.toFixed(2)}%`;
 }
 
 function setText(id, value) {
   document.getElementById(id).textContent = value;
+}
+
+function formatCount(value) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return "Not generated yet";
+  }
+
+  return formatNumber(numericValue);
+}
+
+function safeGet(obj, path, fallback = "Not generated yet") {
+  return path.reduce((current, key) => {
+    if (current && Object.prototype.hasOwnProperty.call(current, key)) {
+      return current[key];
+    }
+
+    return undefined;
+  }, obj) ?? fallback;
 }
 
 function createBarChart(canvasId, labels, values, label, color) {
@@ -127,6 +151,127 @@ function renderKpis(kpis) {
   setText("precision", Number(kpis.model_precision).toFixed(3));
   setText("recall", Number(kpis.model_recall).toFixed(3));
   setText("f1", Number(kpis.model_f1_score).toFixed(3));
+}
+
+function renderWorkflowMetrics(containerId, metrics) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  metrics.forEach((metric) => {
+    const item = document.createElement("div");
+    const label = document.createElement("span");
+    const value = document.createElement("strong");
+
+    label.textContent = metric.label;
+    value.textContent = metric.value;
+    item.appendChild(label);
+    item.appendChild(value);
+    container.appendChild(item);
+  });
+}
+
+function renderMissingWorkflowCard(metricsId, interpretationId) {
+  renderWorkflowMetrics(metricsId, [
+    {
+      label: "Status",
+      value: "Not generated yet",
+    },
+  ]);
+  setText(interpretationId, "Output not generated yet.");
+}
+
+function renderWorkflowOverview(workflowOverview = {}) {
+  const dataQuality = safeGet(workflowOverview, ["data_quality"], {});
+  if (dataQuality.status === "missing") {
+    renderMissingWorkflowCard("dataQualityMetrics", "dataQualityInterpretation");
+  } else {
+    renderWorkflowMetrics("dataQualityMetrics", [
+      { label: "Status", value: safeGet(dataQuality, ["status"]) },
+      { label: "Rows", value: formatCount(safeGet(dataQuality, ["row_count"], null)) },
+      { label: "Warnings", value: formatCount(safeGet(dataQuality, ["warning_count"], null)) },
+    ]);
+    setText("dataQualityInterpretation", "Input data is checked before model training.");
+  }
+
+  const batchReview = safeGet(workflowOverview, ["batch_review"], {});
+  if (batchReview.status === "missing") {
+    renderMissingWorkflowCard("batchReviewMetrics", "batchReviewInterpretation");
+  } else {
+    renderWorkflowMetrics("batchReviewMetrics", [
+      { label: "Rows reviewed", value: formatCount(safeGet(batchReview, ["row_count"], null)) },
+      {
+        label: "Engineering review",
+        value: formatCount(
+          safeGet(batchReview, ["decision_counts", "ENGINEERING_REVIEW_REQUIRED"], null)
+        ),
+      },
+      {
+        label: "Threshold",
+        value:
+          safeGet(batchReview, ["review_threshold"], null) === null
+            ? "Not generated yet"
+            : Number(batchReview.review_threshold).toFixed(2),
+      },
+    ]);
+    setText(
+      "batchReviewInterpretation",
+      "New records are scored and routed for engineering review or monitoring."
+    );
+  }
+
+  const specCompliance = safeGet(workflowOverview, ["spec_compliance"], {});
+  if (specCompliance.status === "missing") {
+    renderMissingWorkflowCard("specComplianceMetrics", "specComplianceInterpretation");
+  } else {
+    renderWorkflowMetrics("specComplianceMetrics", [
+      {
+        label: "Critical",
+        value: formatCount(
+          safeGet(specCompliance, ["status_counts", "CRITICAL_VIOLATION"], null)
+        ),
+      },
+      {
+        label: "Warning",
+        value: formatCount(
+          safeGet(specCompliance, ["status_counts", "WARNING_VIOLATION"], null)
+        ),
+      },
+      {
+        label: "Compliant",
+        value: formatCount(safeGet(specCompliance, ["status_counts", "COMPLIANT"], null)),
+      },
+    ]);
+    setText(
+      "specComplianceInterpretation",
+      "Configured process requirements are checked against new records."
+    );
+  }
+
+  const feedbackLoop = safeGet(workflowOverview, ["feedback_loop"], {});
+  if (feedbackLoop.status === "missing") {
+    renderMissingWorkflowCard("feedbackLoopMetrics", "feedbackLoopInterpretation");
+  } else {
+    renderWorkflowMetrics("feedbackLoopMetrics", [
+      {
+        label: "Issue capture",
+        value: formatPercent(Number(safeGet(feedbackLoop, ["issue_capture_rate"], 0)) * 100),
+      },
+      {
+        label: "False alarm rate",
+        value: formatPercent(
+          Number(safeGet(feedbackLoop, ["false_alarm_rate_among_reviews"], 0)) * 100
+        ),
+      },
+      {
+        label: "Missed issues",
+        value: formatCount(safeGet(feedbackLoop, ["missed_issue_count"], null)),
+      },
+    ]);
+    setText(
+      "feedbackLoopInterpretation",
+      "Later feedback is used to evaluate review decisions and threshold trade-offs."
+    );
+  }
 }
 
 function renderRecommendations(recommendations) {
@@ -653,6 +798,7 @@ async function loadDashboard() {
     const data = await response.json();
 
     renderKpis(data.kpis);
+    renderWorkflowOverview(data.workflow_overview);
     renderRootCauseSummaryCards(data.prediction_results);
     renderCharts(data.charts);
     renderRecommendations(data.recommendations);
