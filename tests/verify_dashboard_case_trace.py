@@ -79,11 +79,28 @@ def test_trace_label_polish() -> None:
     assert "overflow-wrap" in style_css, "Trace wrapping styling missing."
 
 
+def test_trace_layout_polish() -> None:
+    app_js = APP_PATH.read_text(encoding="utf-8")
+    style_css = STYLE_PATH.read_text(encoding="utf-8")
+
+    assert "traceSummary" in app_js
+    assert "traceSummary\", truncateTraceText(caseTrace.trace_summary, 260)" not in app_js
+    assert "traceSummary\", truncateTraceText(caseTrace.trace_summary, 300)" not in app_js
+    assert "+${remainingCount} more" in app_js
+    assert "+${remainingCount} more actions" in app_js
+    assert "formatRequirementChips" in app_js
+    assert "formatTraceActions" in app_js
+    assert "formatViolationSummary" in app_js
+    assert "case-trace-header strong:not(#tracePartId)" in style_css
+    assert "min-height: 315px" in style_css
+
+
 def main() -> None:
     tests = [
         test_case_trace_data,
         test_dashboard_files_reference_trace,
         test_trace_label_polish,
+        test_trace_layout_polish,
     ]
 
     for test in tests:

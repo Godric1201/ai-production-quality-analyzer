@@ -294,33 +294,51 @@ h1 {
   word-break: normal;
 }
 
+.case-trace-header strong:not(#tracePartId) {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.44);
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
 .case-trace-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
   gap: 14px;
 }
 
 .case-trace-block {
-  min-height: 260px;
-  padding: 16px;
+  display: flex;
+  min-height: 315px;
+  padding: 17px;
+  flex-direction: column;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(31, 41, 55, 0.48);
 }
 
 .case-trace-block h3 {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   font-size: 0.98rem;
 }
 
 .trace-metric-list {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+  align-content: start;
 }
 
 .trace-metric-list div {
   min-width: 0;
-  padding: 9px 10px;
+  padding: 10px 11px;
   border: 1px solid rgba(148, 163, 184, 0.14);
   border-radius: 12px;
   background: rgba(15, 23, 42, 0.4);
@@ -339,8 +357,8 @@ h1 {
 .trace-metric-list strong {
   display: block;
   color: var(--text);
-  font-size: 0.9rem;
-  line-height: 1.38;
+  font-size: 0.88rem;
+  line-height: 1.42;
   max-width: 100%;
   overflow-wrap: anywhere;
   white-space: pre-line;
@@ -357,7 +375,7 @@ h1 {
 .trace-metric-list .trace-chip {
   display: inline-flex;
   align-items: center;
-  max-width: 100%;
+  max-width: 180px;
   margin-bottom: 0;
   padding: 4px 8px;
   border: 1px solid rgba(56, 189, 248, 0.25);
@@ -369,18 +387,20 @@ h1 {
   letter-spacing: 0;
   line-height: 1.2;
   overflow-wrap: anywhere;
+  text-align: left;
   text-transform: none;
 }
 
 .case-trace-summary {
-  margin: 14px 0 0;
-  padding: 14px 16px;
+  margin: 16px 0 0;
+  padding: 16px 18px;
   border: 1px solid rgba(52, 211, 153, 0.24);
   border-radius: 16px;
   background: rgba(52, 211, 153, 0.07);
   color: var(--muted);
-  line-height: 1.55;
+  line-height: 1.58;
   overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .dashboard-grid {
