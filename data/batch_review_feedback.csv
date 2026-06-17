@@ -1,0 +1,11 @@
+part_id,actual_scrap,engineer_review_outcome,review_notes
+NB000001,1,confirmed_issue,Synthetic follow-up found a confirmed process issue aligned with high temperature and vibration signals.
+NB000002,0,no_issue,Synthetic follow-up found no quality issue after standard monitoring.
+NB000003,1,missed_issue,Synthetic feedback marks a later issue that was not prioritized for engineering review.
+NB000004,0,no_issue,Synthetic follow-up found no issue despite low temperature driver context.
+NB000005,1,confirmed_issue,Synthetic follow-up confirmed an issue after engineering review for M2 night production.
+NB000006,0,no_issue,Synthetic follow-up found no issue; additional monitoring was sufficient for this illustrative case.
+NB000007,0,no_issue,Synthetic follow-up found no issue after standard monitoring of night shift and humidity context.
+NB000008,0,false_alarm,Synthetic review did not confirm a quality issue and shows an inspection false alarm example.
+NB000009,0,no_issue,Synthetic follow-up found no issue for a low-risk clean process row.
+NB000010,1,needs_follow_up,Synthetic follow-up suggests continued investigation for a reviewed medium-risk case.
