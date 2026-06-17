@@ -14,11 +14,11 @@ This project demonstrates how manufacturing quality data can be transformed into
 
 ## Dashboard Preview
 
-![Dashboard overview](docs/screenshots/dashboard-overview.png)
+![Dashboard workflow overview](docs/screenshots/dashboard-workflow-overview.png)
 
-![High-risk RCA investigation table](docs/screenshots/rca-investigation-table.png)
+![Engineering rulebook and model evaluation](docs/screenshots/engineering-rulebook-model-evaluation.png)
 
-![Model threshold and cost analysis](docs/screenshots/model-threshold-cost.png)
+![Engineering review trace](docs/screenshots/engineering-review-trace.png)
 
 ## What This Project Demonstrates
 
