@@ -1,0 +1,184 @@
+version: 1
+description: "Illustrative RCA rules for synthetic manufacturing quality analytics. Thresholds are portfolio-prototype assumptions, not validated factory limits."
+
+rules:
+  - id: very_high_temperature
+    column: temperature_c
+    type: numeric_threshold
+    operator: ">="
+    value: 195
+    driver: "Very high temperature"
+    severity: "high"
+    evidence: "temperature is well above the configured risk threshold"
+    engineering_interpretation: "Potential thermal drift, overheating, resin degradation, or process setpoint issue."
+    recommendation: "Audit temperature setpoints, cooling performance, and recent thermal alarms before releasing the batch."
+
+  - id: high_temperature
+    column: temperature_c
+    type: numeric_threshold
+    operator: ">"
+    value: 190
+    driver: "High temperature"
+    severity: "medium"
+    evidence: "temperature is above the configured risk threshold"
+    engineering_interpretation: "Possible thermal process drift or insufficient cooling control."
+    recommendation: "Review process temperature control and verify cooling stability around the affected batch."
+
+  - id: low_temperature
+    column: temperature_c
+    type: numeric_threshold
+    operator: "<"
+    value: 175
+    driver: "Low temperature"
+    severity: "medium"
+    evidence: "temperature is below the expected operating range"
+    engineering_interpretation: "Possible under-heating, poor material flow, or incomplete process stabilization."
+    recommendation: "Check heating stability, warm-up completion, and material flow conditions."
+
+  - id: high_pressure
+    column: pressure_bar
+    type: numeric_threshold
+    operator: ">="
+    value: 6.4
+    driver: "High pressure"
+    severity: "medium"
+    evidence: "pressure is above the expected operating range"
+    engineering_interpretation: "Possible restriction, blocked flow path, fixture issue, or aggressive process setting."
+    recommendation: "Inspect pressure regulation, tooling restrictions, and fixture condition."
+
+  - id: low_pressure
+    column: pressure_bar
+    type: numeric_threshold
+    operator: "<="
+    value: 5.1
+    driver: "Low pressure"
+    severity: "medium"
+    evidence: "pressure is below the expected operating range"
+    engineering_interpretation: "Possible leakage, poor clamping, feed variation, or insufficient process force."
+    recommendation: "Check for leaks, feed variation, clamp issues, or insufficient process force."
+
+  - id: high_vibration
+    column: vibration_mm_s
+    type: numeric_threshold
+    operator: ">="
+    value: 3.1
+    driver: "High vibration"
+    severity: "high"
+    evidence: "vibration is above the configured risk threshold"
+    engineering_interpretation: "Possible mechanical instability, tool wear, imbalance, or maintenance issue."
+    recommendation: "Inspect machine vibration sources and check for tool wear, imbalance, or loose fixtures."
+
+  - id: elevated_vibration
+    column: vibration_mm_s
+    type: numeric_threshold
+    operator: ">"
+    value: 2.7
+    driver: "Elevated vibration"
+    severity: "medium"
+    evidence: "vibration is above the normal monitoring band"
+    engineering_interpretation: "Potential early signal of tool wear, loose fixtures, or machine imbalance."
+    recommendation: "Trend vibration for the machine and inspect tooling if the signal persists."
+
+  - id: abnormal_cycle_time
+    column: cycle_time_s
+    type: numeric_threshold
+    operator: ">="
+    value: 53
+    driver: "Abnormal cycle time"
+    severity: "high"
+    evidence: "cycle time is materially above the configured risk threshold"
+    engineering_interpretation: "Possible process slowdown, material handling delay, machine wear, or unstable settings."
+    recommendation: "Investigate cycle time deviation, material handling delays, and machine wear indicators."
+
+  - id: long_cycle_time
+    column: cycle_time_s
+    type: numeric_threshold
+    operator: ">"
+    value: 50
+    driver: "Long cycle time"
+    severity: "medium"
+    evidence: "cycle time is above the configured risk threshold"
+    engineering_interpretation: "Possible setup drift, slower material flow, or operator intervention during the batch."
+    recommendation: "Review cycle time drift and compare against recent setup or operator changes."
+
+  - id: low_operator_experience
+    column: operator_experience_years
+    type: numeric_threshold
+    operator: "<"
+    value: 2
+    driver: "Low operator experience"
+    severity: "medium"
+    evidence: "operator experience is below 2 years"
+    engineering_interpretation: "Additional checklist support or supervisor review may reduce setup and handling variation."
+    recommendation: "Use operator guidance, checklist support, or supervisor sign-off for this setup."
+
+  - id: high_humidity
+    column: humidity_percent
+    type: numeric_threshold
+    operator: ">"
+    value: 60
+    driver: "High humidity"
+    severity: "low"
+    evidence: "humidity is above the configured monitoring band"
+    engineering_interpretation: "Possible environmental contribution to material behavior, handling, or surface quality."
+    recommendation: "Check humidity controls and confirm material storage conditions."
+
+  - id: machine_m2_risk_pattern
+    column: machine_id
+    type: categorical_match
+    values: ["M2", "Machine 2"]
+    driver: "Machine M2 risk pattern"
+    severity: "medium"
+    evidence: "machine is M2, which is configured as a higher-risk asset"
+    engineering_interpretation: "This asset may need calibration review, maintenance inspection, or process capability checks."
+    recommendation: "Inspect M2 calibration, maintenance status, and recent quality history."
+
+  - id: machine_m4_risk_pattern
+    column: machine_id
+    type: categorical_match
+    values: ["M4", "Machine 4"]
+    driver: "Machine M4 risk pattern"
+    severity: "low"
+    evidence: "machine is M4, which carries a mild configured risk signal"
+    engineering_interpretation: "Monitor for recurring variation before scheduling deeper engineering action."
+    recommendation: "Monitor M4 quality trend and confirm process settings remain within control limits."
+
+  - id: night_shift_production
+    column: shift
+    type: categorical_match
+    values: ["night"]
+    driver: "Night shift production"
+    severity: "medium"
+    evidence: "batch was produced during night shift"
+    engineering_interpretation: "Higher scrap risk may reflect staffing, handoff, environmental, or monitoring differences."
+    recommendation: "Apply additional process checks during night shift production."
+
+  - id: late_shift_production
+    column: shift
+    type: categorical_match
+    values: ["late"]
+    driver: "Late shift production"
+    severity: "low"
+    evidence: "batch was produced during late shift"
+    engineering_interpretation: "Consider checking shift handoff notes and process adherence if this pattern repeats."
+    recommendation: "Review shift handoff notes and confirm standard work adherence."
+
+  - id: material_batch_b4
+    column: material_batch
+    type: categorical_match
+    values: ["B4", "batch B4", "material B4"]
+    driver: "Material batch B4"
+    severity: "medium"
+    evidence: "material batch is B4, which is configured as a higher-risk batch"
+    engineering_interpretation: "Possible incoming material variation, storage condition issue, or supplier lot effect."
+    recommendation: "Quarantine or sample-check material batch B4 and compare against supplier lot history."
+
+fallback:
+  high_risk_no_driver:
+    driver: "Elevated predicted scrap risk"
+    severity: "medium"
+    evidence: "model output indicates high scrap risk, but no configured process driver was present"
+    engineering_interpretation: "Review additional process signals or recent production notes not captured by this module."
+    recommendation: "Review model inputs, production notes, and recent maintenance history for uncaptured risk factors."
+
+default_recommendation: "No immediate engineering action required. Continue standard process monitoring."
