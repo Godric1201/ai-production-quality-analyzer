@@ -88,6 +88,62 @@
         </div>
       </section>
 
+      <section class="case-trace-section">
+        <div class="section-heading">
+          <h2>Engineering Review Trace</h2>
+          <p>
+            A traceable example showing how one production record moves from input conditions to model risk, RCA, specification checks, review decision, and later feedback.
+          </p>
+        </div>
+
+        <article class="case-trace-header">
+          <div>
+            <span class="kpi-label">Part ID</span>
+            <strong id="tracePartId">Case trace not generated yet.</strong>
+          </div>
+          <div>
+            <span>Risk</span>
+            <strong id="traceRisk">â€”</strong>
+          </div>
+          <div>
+            <span>Review</span>
+            <strong id="traceReviewDecision">â€”</strong>
+          </div>
+          <div>
+            <span>Spec</span>
+            <strong id="traceSpecStatus">â€”</strong>
+          </div>
+          <div>
+            <span>Feedback</span>
+            <strong id="traceFeedbackClassification">â€”</strong>
+          </div>
+        </article>
+
+        <div class="case-trace-grid">
+          <article class="case-trace-block">
+            <h3>Input Conditions</h3>
+            <div class="trace-metric-list" id="traceInputConditions"></div>
+          </article>
+
+          <article class="case-trace-block">
+            <h3>Model & RCA</h3>
+            <div class="trace-metric-list" id="traceModelRca"></div>
+          </article>
+
+          <article class="case-trace-block">
+            <h3>Specification Check</h3>
+            <div class="trace-metric-list" id="traceSpecCompliance"></div>
+          </article>
+
+          <article class="case-trace-block">
+            <h3>Feedback Outcome</h3>
+            <div class="trace-metric-list" id="traceFeedbackOutcome"></div>
+          </article>
+        </div>
+
+        <p class="case-trace-summary" id="traceSummary">Case trace not generated yet.</p>
+      </section>
+
       <section class="rca-summary-grid">
         <article class="rca-summary-card">
           <span class="kpi-label">Total Predictions</span>

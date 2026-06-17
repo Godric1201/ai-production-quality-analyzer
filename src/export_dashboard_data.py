@@ -20,10 +20,59 @@ DATA_QUALITY_REPORT_PATH = PROJECT_ROOT / "outputs" / "data_quality_report.json"
 BATCH_REVIEW_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "batch_review_summary.json"
 SPEC_COMPLIANCE_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "spec_compliance_summary.json"
 REVIEW_FEEDBACK_SUMMARY_PATH = PROJECT_ROOT / "outputs" / "review_feedback_summary.json"
+BATCH_REVIEW_RESULTS_PATH = PROJECT_ROOT / "outputs" / "batch_review_results.csv"
+SPEC_COMPLIANCE_RESULTS_PATH = PROJECT_ROOT / "outputs" / "spec_compliance_results.csv"
+REVIEW_FEEDBACK_CASES_PATH = PROJECT_ROOT / "outputs" / "review_feedback_cases.csv"
 DASHBOARD_DATA_PATH = PROJECT_ROOT / "dashboard" / "dashboard_data.json"
 PREDICTION_RESULTS_PATH = PROJECT_ROOT / "outputs" / "prediction_results.csv"
 FEATURE_COLUMNS = CATEGORICAL_FEATURES + NUMERIC_FEATURES
 MAX_PREDICTION_EXPORT_ROWS = 25
+
+CASE_TRACE_INPUT_FIELDS = [
+    "machine_id",
+    "temperature_c",
+    "pressure_bar",
+    "cycle_time_s",
+    "shift",
+    "material_batch",
+    "operator_experience_years",
+    "vibration_mm_s",
+    "humidity_percent",
+]
+
+CASE_TRACE_BATCH_COLUMNS = [
+    "part_id",
+    "scrap_probability",
+    "risk_level",
+    "review_threshold",
+    "review_decision",
+    "decision_reason",
+    "root_cause_summary",
+    "suspected_driver_count",
+    "top_suspected_drivers",
+    "engineering_recommendations",
+]
+
+CASE_TRACE_SPEC_COLUMNS = [
+    "part_id",
+    "spec_compliance_status",
+    "violation_count",
+    "critical_violation_count",
+    "warning_violation_count",
+    "violated_requirement_ids",
+    "violation_summary",
+    "recommended_actions",
+]
+
+CASE_TRACE_FEEDBACK_COLUMNS = [
+    "part_id",
+    "actual_scrap",
+    "engineer_review_outcome",
+    "feedback_classification",
+    "feedback_priority",
+    "feedback_interpretation",
+    "review_notes",
+]
 
 def load_json(path: Path) -> dict:
     """Load a JSON file."""
@@ -44,6 +93,38 @@ def load_optional_json(path: Path) -> dict:
 
     with open(path, "r", encoding="utf-8") as file:
         return json.load(file)
+
+
+def trace_missing(message: str = "Case trace outputs not generated yet.") -> dict:
+    """Return a safe placeholder for unavailable case trace data."""
+    return {
+        "status": "missing",
+        "message": message,
+    }
+
+
+def load_trace_csv(path: Path, required_columns: list[str], label: str) -> pd.DataFrame | None:
+    """Load a trace source CSV, returning None if it is not usable yet."""
+    if not path.exists():
+        return None
+
+    df = pd.read_csv(path)
+    missing_columns = [column for column in required_columns if column not in df.columns]
+    if df.empty or missing_columns:
+        return None
+
+    df = df.copy()
+    df["part_id"] = df["part_id"].astype(str)
+    return df
+
+
+def clean_value(value: object) -> object:
+    """Convert pandas missing values to None for dashboard JSON."""
+    if pd.isna(value):
+        return None
+    if hasattr(value, "item"):
+        return value.item()
+    return value
 
 
 def load_inputs() -> tuple[pd.DataFrame, dict, pd.DataFrame, dict, pd.DataFrame, dict, object]:
@@ -463,6 +544,177 @@ def build_workflow_overview() -> dict:
     }
 
 
+def select_trace_row(trace_df: pd.DataFrame) -> pd.Series:
+    """Select one representative part for the engineering review trace."""
+    sortable = trace_df.copy()
+    sortable["scrap_probability"] = pd.to_numeric(
+        sortable["scrap_probability"],
+        errors="coerce",
+    ).fillna(-1)
+
+    true_positive_critical = sortable[
+        (sortable["feedback_classification"] == "TRUE_POSITIVE_REVIEW")
+        & (sortable["spec_compliance_status"] == "CRITICAL_VIOLATION")
+    ]
+    if not true_positive_critical.empty:
+        return true_positive_critical.sort_values(
+            ["scrap_probability", "part_id"],
+            ascending=[False, True],
+        ).iloc[0]
+
+    engineering_review = sortable[
+        sortable["review_decision"] == "ENGINEERING_REVIEW_REQUIRED"
+    ]
+    if not engineering_review.empty:
+        return engineering_review.sort_values(
+            ["scrap_probability", "part_id"],
+            ascending=[False, True],
+        ).iloc[0]
+
+    if not sortable.empty:
+        return sortable.sort_values(
+            ["scrap_probability", "part_id"],
+            ascending=[False, True],
+        ).iloc[0]
+
+    return trace_df.iloc[0]
+
+
+def row_object(row: pd.Series, columns: list[str]) -> dict:
+    """Extract a JSON-safe object from a row."""
+    return {
+        column: clean_value(row[column])
+        for column in columns
+        if column in row.index
+    }
+
+
+def build_trace_summary(row: pd.Series) -> str:
+    """Build a concise readable trace summary for the selected record."""
+    review_decision = clean_value(row.get("review_decision"))
+    risk_level = clean_value(row.get("risk_level"))
+    rca_drivers = clean_value(row.get("top_suspected_drivers"))
+    spec_status = clean_value(row.get("spec_compliance_status"))
+    feedback_classification = clean_value(row.get("feedback_classification"))
+
+    summary_parts = []
+    if review_decision == "ENGINEERING_REVIEW_REQUIRED":
+        summary_parts.append(
+            f"the model routed it for engineering review with {risk_level} predicted risk"
+        )
+    else:
+        summary_parts.append(
+            f"the model routed it to {str(review_decision).lower().replace('_', ' ')} with {risk_level} predicted risk"
+        )
+
+    if rca_drivers:
+        summary_parts.append(f"RCA highlighted {rca_drivers}")
+    else:
+        summary_parts.append("RCA did not identify configured suspected drivers")
+
+    if spec_status:
+        summary_parts.append(
+            f"specification checks reported {str(spec_status).lower().replace('_', ' ')}"
+        )
+    else:
+        summary_parts.append("specification compliance data is not available")
+
+    if feedback_classification:
+        summary_parts.append(
+            f"later feedback classified the case as {str(feedback_classification).lower().replace('_', ' ')}"
+        )
+    else:
+        summary_parts.append("later feedback is not available")
+
+    return "This record was selected as a traceable engineering review example because " + ", ".join(summary_parts) + "."
+
+
+def build_case_trace() -> dict:
+    """Build a representative part-level trace across review workflow outputs."""
+    batch_df = load_trace_csv(
+        BATCH_REVIEW_RESULTS_PATH,
+        CASE_TRACE_BATCH_COLUMNS,
+        "batch review results",
+    )
+    spec_df = load_trace_csv(
+        SPEC_COMPLIANCE_RESULTS_PATH,
+        CASE_TRACE_SPEC_COLUMNS,
+        "spec compliance results",
+    )
+    feedback_df = load_trace_csv(
+        REVIEW_FEEDBACK_CASES_PATH,
+        CASE_TRACE_FEEDBACK_COLUMNS,
+        "review feedback cases",
+    )
+
+    if batch_df is None or spec_df is None or feedback_df is None:
+        return trace_missing()
+
+    trace_df = batch_df.merge(
+        spec_df[CASE_TRACE_SPEC_COLUMNS],
+        on="part_id",
+        how="left",
+        validate="one_to_one",
+    ).merge(
+        feedback_df[CASE_TRACE_FEEDBACK_COLUMNS],
+        on="part_id",
+        how="left",
+        validate="one_to_one",
+    )
+
+    if trace_df.empty:
+        return trace_missing()
+
+    row = select_trace_row(trace_df)
+    return {
+        "part_id": clean_value(row.get("part_id")),
+        "input_conditions": row_object(row, CASE_TRACE_INPUT_FIELDS),
+        "model_review": row_object(
+            row,
+            [
+                "scrap_probability",
+                "risk_level",
+                "review_threshold",
+                "review_decision",
+                "decision_reason",
+            ],
+        ),
+        "rca": row_object(
+            row,
+            [
+                "root_cause_summary",
+                "suspected_driver_count",
+                "top_suspected_drivers",
+                "engineering_recommendations",
+            ],
+        ),
+        "spec_compliance": row_object(
+            row,
+            [
+                "spec_compliance_status",
+                "violation_count",
+                "critical_violation_count",
+                "warning_violation_count",
+                "violated_requirement_ids",
+                "violation_summary",
+                "recommended_actions",
+            ],
+        ),
+        "feedback": row_object(
+            row,
+            [
+                "actual_scrap",
+                "engineer_review_outcome",
+                "feedback_classification",
+                "feedback_priority",
+                "feedback_interpretation",
+                "review_notes",
+            ],
+        ),
+        "trace_summary": build_trace_summary(row),
+    }
+
+
 def get_prediction_results_export(prediction_results: pd.DataFrame) -> list[dict]:
     """Return a compact high-risk prediction sample for JSON export."""
     export_columns = [
@@ -592,6 +844,7 @@ def build_dashboard_data(
         "prediction_results": get_prediction_results_export(prediction_results),
         "sample_prediction": build_sample_prediction(prediction_results),
         "workflow_overview": build_workflow_overview(),
+        "case_trace": build_case_trace(),
     }
 
     return dashboard_data

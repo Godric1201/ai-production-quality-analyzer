@@ -50,8 +50,27 @@ function safeGet(obj, path, fallback = "Not generated yet") {
       return current[key];
     }
 
-    return undefined;
+  return undefined;
   }, obj) ?? fallback;
+}
+
+function formatValue(value, fallback = "Not generated yet") {
+  if (value === null || value === undefined || value === "") {
+    return fallback;
+  }
+
+  return String(value);
+}
+
+function splitListText(value) {
+  if (!value) {
+    return [];
+  }
+
+  return String(value)
+    .split(";")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function createBarChart(canvasId, labels, values, label, color) {
@@ -272,6 +291,145 @@ function renderWorkflowOverview(workflowOverview = {}) {
       "Later feedback is used to evaluate review decisions and threshold trade-offs."
     );
   }
+}
+
+function renderTraceList(containerId, items) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  items.forEach((item) => {
+    const row = document.createElement("div");
+    const label = document.createElement("span");
+    const value = document.createElement("strong");
+
+    label.textContent = item.label;
+    value.textContent = item.value;
+    row.appendChild(label);
+    row.appendChild(value);
+    container.appendChild(row);
+  });
+}
+
+function renderMissingCaseTrace() {
+  setText("tracePartId", "Case trace not generated yet.");
+  setText("traceRisk", "Not generated yet");
+  setText("traceReviewDecision", "Not generated yet");
+  setText("traceSpecStatus", "Not generated yet");
+  setText("traceFeedbackClassification", "Not generated yet");
+
+  ["traceInputConditions", "traceModelRca", "traceSpecCompliance", "traceFeedbackOutcome"].forEach(
+    (containerId) => {
+      renderTraceList(containerId, [
+        {
+          label: "Status",
+          value: "Not generated yet",
+        },
+      ]);
+    }
+  );
+  setText("traceSummary", "Case trace not generated yet.");
+}
+
+function renderCaseTrace(caseTrace = {}) {
+  if (!caseTrace || caseTrace.status === "missing") {
+    renderMissingCaseTrace();
+    return;
+  }
+
+  const input = safeGet(caseTrace, ["input_conditions"], {});
+  const modelReview = safeGet(caseTrace, ["model_review"], {});
+  const rca = safeGet(caseTrace, ["rca"], {});
+  const spec = safeGet(caseTrace, ["spec_compliance"], {});
+  const feedback = safeGet(caseTrace, ["feedback"], {});
+  const probability = safeGet(modelReview, ["scrap_probability"], null);
+  const probabilityText = formatPredictionProbability(probability);
+
+  setText("tracePartId", formatValue(caseTrace.part_id));
+  setText(
+    "traceRisk",
+    `${formatValue(safeGet(modelReview, ["risk_level"], "Unknown"))} · ${probabilityText}`
+  );
+  setText("traceReviewDecision", formatValue(safeGet(modelReview, ["review_decision"])));
+  setText("traceSpecStatus", formatValue(safeGet(spec, ["spec_compliance_status"])));
+  setText(
+    "traceFeedbackClassification",
+    formatValue(safeGet(feedback, ["feedback_classification"]))
+  );
+
+  renderTraceList("traceInputConditions", [
+    { label: "Machine", value: formatValue(safeGet(input, ["machine_id"])) },
+    { label: "Shift", value: formatValue(safeGet(input, ["shift"])) },
+    { label: "Material batch", value: formatValue(safeGet(input, ["material_batch"])) },
+    {
+      label: "Temperature",
+      value: `${formatValue(safeGet(input, ["temperature_c"]))} C`,
+    },
+    {
+      label: "Vibration",
+      value: `${formatValue(safeGet(input, ["vibration_mm_s"]))} mm/s`,
+    },
+    {
+      label: "Cycle time",
+      value: `${formatValue(safeGet(input, ["cycle_time_s"]))} s`,
+    },
+  ]);
+
+  renderTraceList("traceModelRca", [
+    { label: "Scrap probability", value: probabilityText },
+    { label: "Risk level", value: formatValue(safeGet(modelReview, ["risk_level"])) },
+    {
+      label: "Root cause summary",
+      value: formatValue(safeGet(rca, ["root_cause_summary"])),
+    },
+    {
+      label: "Top drivers",
+      value: splitListText(safeGet(rca, ["top_suspected_drivers"], ""))
+        .slice(0, 3)
+        .join("; ") || "Not generated yet",
+    },
+  ]);
+
+  renderTraceList("traceSpecCompliance", [
+    {
+      label: "Status",
+      value: formatValue(safeGet(spec, ["spec_compliance_status"])),
+    },
+    {
+      label: "Violated requirements",
+      value: splitListText(safeGet(spec, ["violated_requirement_ids"], ""))
+        .slice(0, 4)
+        .join("; ") || "None",
+    },
+    {
+      label: "Violation summary",
+      value: truncateText(formatValue(safeGet(spec, ["violation_summary"], "None")), 160),
+    },
+    {
+      label: "Recommended actions",
+      value: truncateText(formatValue(safeGet(spec, ["recommended_actions"], "None")), 160),
+    },
+  ]);
+
+  renderTraceList("traceFeedbackOutcome", [
+    {
+      label: "Actual scrap",
+      value: Number(safeGet(feedback, ["actual_scrap"], 0)) === 1 ? "Yes" : "No",
+    },
+    {
+      label: "Engineer outcome",
+      value: formatValue(safeGet(feedback, ["engineer_review_outcome"])),
+    },
+    {
+      label: "Classification",
+      value: formatValue(safeGet(feedback, ["feedback_classification"])),
+    },
+    {
+      label: "Interpretation",
+      value: formatValue(safeGet(feedback, ["feedback_interpretation"])),
+    },
+  ]);
+
+  setText("traceSummary", formatValue(caseTrace.trace_summary));
 }
 
 function renderRecommendations(recommendations) {
@@ -799,6 +957,7 @@ async function loadDashboard() {
 
     renderKpis(data.kpis);
     renderWorkflowOverview(data.workflow_overview);
+    renderCaseTrace(data.case_trace);
     renderRootCauseSummaryCards(data.prediction_results);
     renderCharts(data.charts);
     renderRecommendations(data.recommendations);
