@@ -1,0 +1,72 @@
+{
+  "input_path": "data\\new_production_batch.csv",
+  "row_count": 10,
+  "review_threshold": 0.4,
+  "threshold_source": "cost_optimized_threshold",
+  "decision_counts": {
+    "ADDITIONAL_MONITORING": 1,
+    "ENGINEERING_REVIEW_REQUIRED": 4,
+    "STANDARD_MONITORING": 5
+  },
+  "risk_level_counts": {
+    "High": 1,
+    "Low": 5,
+    "Medium": 4
+  },
+  "top_suspected_drivers": [
+    {
+      "driver": "Elevated vibration",
+      "count": 3
+    },
+    {
+      "driver": "High temperature",
+      "count": 3
+    },
+    {
+      "driver": "Night shift production",
+      "count": 2
+    },
+    {
+      "driver": "Abnormal cycle time",
+      "count": 1
+    },
+    {
+      "driver": "High humidity",
+      "count": 1
+    },
+    {
+      "driver": "High pressure",
+      "count": 1
+    },
+    {
+      "driver": "High vibration",
+      "count": 1
+    },
+    {
+      "driver": "Long cycle time",
+      "count": 1
+    },
+    {
+      "driver": "Low pressure",
+      "count": 1
+    },
+    {
+      "driver": "Low temperature",
+      "count": 1
+    },
+    {
+      "driver": "Machine M2 risk pattern",
+      "count": 1
+    },
+    {
+      "driver": "Material batch B4",
+      "count": 1
+    },
+    {
+      "driver": "Very high temperature",
+      "count": 1
+    }
+  ],
+  "validation_warnings": [],
+  "note": "Synthetic portfolio-prototype review support output; not a quality disposition authority."
+}

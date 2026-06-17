@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import yaml
 
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_RULES_PATH = PROJECT_ROOT / "config" / "rca_rules.yaml"
 
 SEVERITY_RANK = {"high": 3, "medium": 2, "low": 1}
 
@@ -21,6 +27,12 @@ SUPPORTED_COLUMNS = {
     "humidity": ("humidity", "humidity_percent"),
     "scrap_probability": ("scrap_probability", "scrap_risk_probability"),
     "predicted_scrap_risk": ("predicted_scrap_risk", "risk_level"),
+}
+
+COLUMN_ALIAS_TO_LOGICAL = {
+    alias.lower(): logical_column
+    for logical_column, aliases in SUPPORTED_COLUMNS.items()
+    for alias in aliases
 }
 
 
@@ -47,6 +59,20 @@ def _get_value(row: dict[str, Any], logical_column: str) -> Any | None:
     return None
 
 
+def _get_configured_value(row: dict[str, Any], column: str) -> Any | None:
+    """Return a row value for a configured column, including supported aliases."""
+    normalized_column = str(column).lower()
+    direct_value = row.get(normalized_column)
+    if direct_value is not None and pd.notna(direct_value):
+        return direct_value
+
+    logical_column = COLUMN_ALIAS_TO_LOGICAL.get(normalized_column)
+    if logical_column:
+        return _get_value(row, logical_column)
+
+    return None
+
+
 def _as_float(value: Any) -> float | None:
     """Convert numeric-looking values to float while tolerating blanks."""
     try:
@@ -63,24 +89,6 @@ def _as_text(value: Any) -> str | None:
         return None
     text = str(value).strip()
     return text.lower() if text else None
-
-
-def _add_driver(
-    drivers: list[dict[str, str]],
-    driver: str,
-    severity: str,
-    evidence: str,
-    engineering_interpretation: str,
-) -> None:
-    """Append a suspected driver using the public output structure."""
-    drivers.append(
-        {
-            "driver": driver,
-            "severity": severity,
-            "evidence": evidence,
-            "engineering_interpretation": engineering_interpretation,
-        }
-    )
 
 
 def _sort_drivers(drivers: list[dict[str, str]]) -> list[tuple[int, dict[str, str]]]:
@@ -109,180 +117,159 @@ def _risk_level(row: dict[str, Any]) -> str:
     return "low"
 
 
+@lru_cache(maxsize=4)
+def load_rca_rules(config_path: Path | None = None) -> dict:
+    """Load and validate the configured RCA rules."""
+    path = config_path or DEFAULT_RULES_PATH
+    if not path.exists():
+        raise FileNotFoundError(f"RCA rules config not found at {path}")
+
+    with open(path, "r", encoding="utf-8") as file:
+        config = yaml.safe_load(file)
+
+    if not isinstance(config, dict):
+        raise ValueError("RCA rules config must be a YAML mapping.")
+
+    rules = config.get("rules")
+    if not isinstance(rules, list):
+        raise ValueError("RCA rules config must contain a 'rules' list.")
+
+    for index, rule in enumerate(rules, start=1):
+        if not isinstance(rule, dict):
+            raise ValueError(f"RCA rule #{index} must be a mapping.")
+        _validate_rule(rule, index)
+
+    fallback = config.get("fallback", {})
+    if fallback and not isinstance(fallback, dict):
+        raise ValueError("RCA rules config 'fallback' must be a mapping.")
+
+    return config
+
+
+def _validate_rule(rule: dict, index: int) -> None:
+    """Validate one configured RCA rule."""
+    required_fields = {
+        "id",
+        "column",
+        "type",
+        "driver",
+        "severity",
+        "evidence",
+        "engineering_interpretation",
+    }
+    missing_fields = sorted(required_fields - set(rule))
+    if missing_fields:
+        raise ValueError(
+            f"RCA rule #{index} is missing required fields: {missing_fields}"
+        )
+
+    rule_type = rule["type"]
+    if rule_type == "numeric_threshold":
+        if rule.get("operator") not in {">", ">=", "<", "<="}:
+            raise ValueError(
+                f"RCA rule '{rule['id']}' has unsupported numeric operator."
+            )
+        if _as_float(rule.get("value")) is None:
+            raise ValueError(f"RCA rule '{rule['id']}' must define a numeric value.")
+    elif rule_type == "categorical_match":
+        values = rule.get("values")
+        if not isinstance(values, list) or not values:
+            raise ValueError(
+                f"RCA rule '{rule['id']}' must define non-empty categorical values."
+            )
+    else:
+        raise ValueError(f"RCA rule '{rule['id']}' has unsupported type '{rule_type}'.")
+
+    if rule["severity"] not in SEVERITY_RANK:
+        raise ValueError(f"RCA rule '{rule['id']}' has unsupported severity.")
+
+
+def evaluate_rule(row: dict, rule: dict) -> dict | None:
+    """Evaluate one configured RCA rule against a normalized row."""
+    rule_type = rule["type"]
+
+    if rule_type == "numeric_threshold":
+        value = _as_float(_get_configured_value(row, rule["column"]))
+        threshold = _as_float(rule["value"])
+        if value is None or threshold is None:
+            return None
+
+        operator = rule["operator"]
+        matched = (
+            (operator == ">" and value > threshold)
+            or (operator == ">=" and value >= threshold)
+            or (operator == "<" and value < threshold)
+            or (operator == "<=" and value <= threshold)
+        )
+    elif rule_type == "categorical_match":
+        value = _as_text(_get_configured_value(row, rule["column"]))
+        expected_values = {_as_text(item) for item in rule["values"]}
+        expected_values.discard(None)
+        matched = value in expected_values
+    else:
+        raise ValueError(f"Unsupported RCA rule type: {rule_type}")
+
+    if not matched:
+        return None
+
+    return {
+        "driver": rule["driver"],
+        "severity": rule["severity"],
+        "evidence": rule["evidence"],
+        "engineering_interpretation": rule["engineering_interpretation"],
+    }
+
+
+def evaluate_rules(row: dict, rules_config: dict) -> list[dict]:
+    """Evaluate configured RCA rules against a normalized row."""
+    drivers = []
+
+    for rule in rules_config["rules"]:
+        driver = evaluate_rule(row, rule)
+        if driver is not None:
+            drivers.append(driver)
+
+    return drivers
+
+
+def _build_fallback_driver(rules_config: dict) -> dict | None:
+    """Build the configured high-risk fallback driver."""
+    fallback = rules_config.get("fallback", {}).get("high_risk_no_driver")
+    if not fallback:
+        return None
+
+    return {
+        "driver": fallback["driver"],
+        "severity": fallback["severity"],
+        "evidence": fallback["evidence"],
+        "engineering_interpretation": fallback["engineering_interpretation"],
+    }
+
+
 def analyze_root_causes(row: dict | pd.Series) -> dict:
     """Analyze one production row and return likely quality risk drivers.
 
-    The analysis is intentionally rule-based and deterministic. It checks only
-    the fields present in the supplied row, so it can be used with partial data
-    from model scoring, dashboards, or report generation pipelines.
+    The analysis is intentionally rule-based and deterministic. Rules are loaded
+    from config/rca_rules.yaml so prototype thresholds and recommendation text
+    can be reviewed without changing Python code.
     """
+    rules_config = load_rca_rules()
     normalized_row = _normalize_row(_row_to_dict(row))
-    drivers: list[dict[str, str]] = []
-
-    temperature = _as_float(_get_value(normalized_row, "temperature"))
-    if temperature is not None:
-        if temperature >= 195:
-            _add_driver(
-                drivers,
-                "Very high temperature",
-                "high",
-                "temperature is well above the configured risk threshold",
-                "Potential thermal drift, overheating, resin degradation, or process setpoint issue.",
-            )
-        elif temperature > 190:
-            _add_driver(
-                drivers,
-                "High temperature",
-                "medium",
-                "temperature is above the configured risk threshold",
-                "Possible thermal process drift or insufficient cooling control.",
-            )
-        elif temperature < 175:
-            _add_driver(
-                drivers,
-                "Low temperature",
-                "medium",
-                "temperature is below the expected operating range",
-                "Possible under-heating, poor material flow, or incomplete process stabilization.",
-            )
-
-    pressure = _as_float(_get_value(normalized_row, "pressure"))
-    if pressure is not None:
-        if pressure >= 6.4:
-            _add_driver(
-                drivers,
-                "High pressure",
-                "medium",
-                "pressure is above the expected operating range",
-                "Possible restriction, blocked flow path, fixture issue, or aggressive process setting.",
-            )
-        elif pressure <= 5.1:
-            _add_driver(
-                drivers,
-                "Low pressure",
-                "medium",
-                "pressure is below the expected operating range",
-                "Possible leakage, poor clamping, feed variation, or insufficient process force.",
-            )
-
-    vibration = _as_float(_get_value(normalized_row, "vibration"))
-    if vibration is not None:
-        if vibration >= 3.1:
-            _add_driver(
-                drivers,
-                "High vibration",
-                "high",
-                "vibration is above the configured risk threshold",
-                "Possible mechanical instability, tool wear, imbalance, or maintenance issue.",
-            )
-        elif vibration > 2.7:
-            _add_driver(
-                drivers,
-                "Elevated vibration",
-                "medium",
-                "vibration is above the normal monitoring band",
-                "Potential early signal of tool wear, loose fixtures, or machine imbalance.",
-            )
-
-    cycle_time = _as_float(_get_value(normalized_row, "cycle_time"))
-    if cycle_time is not None:
-        if cycle_time >= 53:
-            _add_driver(
-                drivers,
-                "Abnormal cycle time",
-                "high",
-                "cycle time is materially above the configured risk threshold",
-                "Possible process slowdown, material handling delay, machine wear, or unstable settings.",
-            )
-        elif cycle_time > 50:
-            _add_driver(
-                drivers,
-                "Long cycle time",
-                "medium",
-                "cycle time is above the configured risk threshold",
-                "Possible setup drift, slower material flow, or operator intervention during the batch.",
-            )
-
-    machine = _as_text(_get_value(normalized_row, "machine"))
-    if machine in {"m2", "machine 2"}:
-        _add_driver(
-            drivers,
-            "Machine M2 risk pattern",
-            "medium",
-            "machine is M2, which is configured as a higher-risk asset",
-            "This asset may need calibration review, maintenance inspection, or process capability checks.",
-        )
-    elif machine in {"m4", "machine 4"}:
-        _add_driver(
-            drivers,
-            "Machine M4 risk pattern",
-            "low",
-            "machine is M4, which carries a mild configured risk signal",
-            "Monitor for recurring variation before scheduling deeper engineering action.",
-        )
-
-    shift = _as_text(_get_value(normalized_row, "shift"))
-    if shift == "night":
-        _add_driver(
-            drivers,
-            "Night shift production",
-            "medium",
-            "batch was produced during night shift",
-            "Higher scrap risk may reflect staffing, handoff, environmental, or monitoring differences.",
-        )
-    elif shift == "late":
-        _add_driver(
-            drivers,
-            "Late shift production",
-            "low",
-            "batch was produced during late shift",
-            "Consider checking shift handoff notes and process adherence if this pattern repeats.",
-        )
-
-    material = _as_text(_get_value(normalized_row, "material"))
-    if material in {"b4", "batch b4", "material b4"}:
-        _add_driver(
-            drivers,
-            "Material batch B4",
-            "medium",
-            "material batch is B4, which is configured as a higher-risk batch",
-            "Possible incoming material variation, storage condition issue, or supplier lot effect.",
-        )
-
-    operator_experience = _as_float(_get_value(normalized_row, "operator_experience"))
-    if operator_experience is not None and operator_experience < 2:
-        _add_driver(
-            drivers,
-            "Low operator experience",
-            "medium",
-            "operator experience is below 2 years",
-            "Additional checklist support or supervisor review may reduce setup and handling variation.",
-        )
-
-    humidity = _as_float(_get_value(normalized_row, "humidity"))
-    if humidity is not None and humidity > 60:
-        _add_driver(
-            drivers,
-            "High humidity",
-            "low",
-            "humidity is above the configured monitoring band",
-            "Possible environmental contribution to material behavior, handling, or surface quality.",
-        )
+    drivers = evaluate_rules(normalized_row, rules_config)
 
     risk_level = _risk_level(normalized_row)
     if risk_level == "high" and not drivers:
-        _add_driver(
-            drivers,
-            "Elevated predicted scrap risk",
-            "medium",
-            "model output indicates high scrap risk, but no configured process driver was present",
-            "Review additional process signals or recent production notes not captured by this module.",
-        )
+        fallback_driver = _build_fallback_driver(rules_config)
+        if fallback_driver is not None:
+            drivers.append(fallback_driver)
 
     suspected_drivers = [driver for _, driver in _sort_drivers(drivers)]
     analysis = {
         "suspected_drivers": suspected_drivers,
-        "recommendations": generate_engineering_recommendations(suspected_drivers),
+        "recommendations": generate_engineering_recommendations(
+            suspected_drivers,
+            rules_config,
+        ),
         "summary": "",
         "risk_level": risk_level,
     }
@@ -290,36 +277,33 @@ def analyze_root_causes(row: dict | pd.Series) -> dict:
     return analysis
 
 
-def generate_engineering_recommendations(root_causes: list[dict]) -> list[str]:
-    """Convert suspected root causes into concise engineering actions."""
-    recommendation_map = {
-        "Very high temperature": "Audit temperature setpoints, cooling performance, and recent thermal alarms before releasing the batch.",
-        "High temperature": "Review process temperature control and verify cooling stability around the affected batch.",
-        "Low temperature": "Check heating stability, warm-up completion, and material flow conditions.",
-        "High pressure": "Inspect pressure regulation, tooling restrictions, and fixture condition.",
-        "Low pressure": "Check for leaks, feed variation, clamp issues, or insufficient process force.",
-        "High vibration": "Inspect machine vibration sources and check for tool wear, imbalance, or loose fixtures.",
-        "Elevated vibration": "Trend vibration for the machine and inspect tooling if the signal persists.",
-        "Abnormal cycle time": "Investigate cycle time deviation, material handling delays, and machine wear indicators.",
-        "Long cycle time": "Review cycle time drift and compare against recent setup or operator changes.",
-        "Machine M2 risk pattern": "Inspect M2 calibration, maintenance status, and recent quality history.",
-        "Machine M4 risk pattern": "Monitor M4 quality trend and confirm process settings remain within control limits.",
-        "Night shift production": "Apply additional process checks during night shift production.",
-        "Late shift production": "Review shift handoff notes and confirm standard work adherence.",
-        "Material batch B4": "Quarantine or sample-check material batch B4 and compare against supplier lot history.",
-        "Low operator experience": "Use operator guidance, checklist support, or supervisor sign-off for this setup.",
-        "High humidity": "Check humidity controls and confirm material storage conditions.",
-        "Elevated predicted scrap risk": "Review model inputs, production notes, and recent maintenance history for uncaptured risk factors.",
+def generate_engineering_recommendations(
+    suspected_drivers: list[dict],
+    rules_config: dict | None = None,
+) -> list[str]:
+    """Convert suspected root causes into configured engineering actions."""
+    config = rules_config or load_rca_rules()
+    recommendations_by_driver = {
+        rule["driver"]: rule.get("recommendation")
+        for rule in config.get("rules", [])
     }
 
+    fallback = config.get("fallback", {}).get("high_risk_no_driver", {})
+    if fallback:
+        recommendations_by_driver[fallback["driver"]] = fallback.get("recommendation")
+
     recommendations: list[str] = []
-    for root_cause in root_causes:
-        recommendation = recommendation_map.get(root_cause.get("driver"))
+    for root_cause in suspected_drivers:
+        recommendation = recommendations_by_driver.get(root_cause.get("driver"))
         if recommendation and recommendation not in recommendations:
             recommendations.append(recommendation)
 
     if not recommendations:
-        recommendations.append("No immediate engineering action required. Continue standard process monitoring.")
+        default_recommendation = config.get(
+            "default_recommendation",
+            "No immediate engineering action required. Continue standard process monitoring.",
+        )
+        recommendations.append(default_recommendation)
 
     return recommendations
 

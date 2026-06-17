@@ -1,0 +1,454 @@
+{
+  "status": "PASS",
+  "input_path": "data\\production_quality_data.csv",
+  "row_count": 5000,
+  "column_count": 11,
+  "target_summary": {
+    "target_column": "scrap",
+    "total_rows": 5000,
+    "good_count": 4642,
+    "scrap_count": 358,
+    "scrap_rate": 0.0716,
+    "invalid_values": []
+  },
+  "missing_values": {
+    "columns": [
+      {
+        "column": "part_id",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      },
+      {
+        "column": "machine_id",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      },
+      {
+        "column": "temperature_c",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      },
+      {
+        "column": "pressure_bar",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      },
+      {
+        "column": "cycle_time_s",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      },
+      {
+        "column": "shift",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      },
+      {
+        "column": "material_batch",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      },
+      {
+        "column": "operator_experience_years",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      },
+      {
+        "column": "vibration_mm_s",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      },
+      {
+        "column": "humidity_percent",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      },
+      {
+        "column": "scrap",
+        "missing_count": 0,
+        "missing_percentage": 0.0,
+        "status": "PASS"
+      }
+    ]
+  },
+  "categorical_issues": {
+    "columns": [
+      {
+        "column": "machine_id",
+        "expected_values": [
+          "M1",
+          "M2",
+          "M3",
+          "M4"
+        ],
+        "unexpected_values": [],
+        "status": "PASS"
+      },
+      {
+        "column": "shift",
+        "expected_values": [
+          "early",
+          "late",
+          "night"
+        ],
+        "unexpected_values": [],
+        "status": "PASS"
+      },
+      {
+        "column": "material_batch",
+        "expected_values": [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5"
+        ],
+        "unexpected_values": [],
+        "status": "PASS"
+      }
+    ]
+  },
+  "engineering_range_warnings": {
+    "columns": [
+      {
+        "column": "temperature_c",
+        "minimum": 160,
+        "maximum": 210,
+        "below_range_count": 0,
+        "above_range_count": 0,
+        "outside_range_count": 0,
+        "status": "PASS"
+      },
+      {
+        "column": "pressure_bar",
+        "minimum": 4.0,
+        "maximum": 7.5,
+        "below_range_count": 0,
+        "above_range_count": 0,
+        "outside_range_count": 0,
+        "status": "PASS"
+      },
+      {
+        "column": "cycle_time_s",
+        "minimum": 30,
+        "maximum": 70,
+        "below_range_count": 0,
+        "above_range_count": 0,
+        "outside_range_count": 0,
+        "status": "PASS"
+      },
+      {
+        "column": "operator_experience_years",
+        "minimum": 0,
+        "maximum": 20,
+        "below_range_count": 0,
+        "above_range_count": 0,
+        "outside_range_count": 0,
+        "status": "PASS"
+      },
+      {
+        "column": "vibration_mm_s",
+        "minimum": 0,
+        "maximum": 6,
+        "below_range_count": 0,
+        "above_range_count": 0,
+        "outside_range_count": 0,
+        "status": "PASS"
+      },
+      {
+        "column": "humidity_percent",
+        "minimum": 0,
+        "maximum": 100,
+        "below_range_count": 0,
+        "above_range_count": 0,
+        "outside_range_count": 0,
+        "status": "PASS"
+      }
+    ]
+  },
+  "checks": [
+    {
+      "name": "schema_validation",
+      "status": "PASS",
+      "message": "All required columns are present.",
+      "details": {
+        "missing_columns": []
+      }
+    },
+    {
+      "name": "unexpected_columns",
+      "status": "PASS",
+      "message": "No unexpected columns found.",
+      "details": {
+        "unexpected_columns": []
+      }
+    },
+    {
+      "name": "empty_dataset",
+      "status": "PASS",
+      "message": "Dataset contains rows.",
+      "details": {
+        "row_count": 5000
+      }
+    },
+    {
+      "name": "missing_values",
+      "status": "PASS",
+      "message": "No missing values found in required columns.",
+      "details": {
+        "columns": [
+          {
+            "column": "part_id",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          },
+          {
+            "column": "machine_id",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          },
+          {
+            "column": "temperature_c",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          },
+          {
+            "column": "pressure_bar",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          },
+          {
+            "column": "cycle_time_s",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          },
+          {
+            "column": "shift",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          },
+          {
+            "column": "material_batch",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          },
+          {
+            "column": "operator_experience_years",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          },
+          {
+            "column": "vibration_mm_s",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          },
+          {
+            "column": "humidity_percent",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          },
+          {
+            "column": "scrap",
+            "missing_count": 0,
+            "missing_percentage": 0.0,
+            "status": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "numeric_type_validation",
+      "status": "PASS",
+      "message": "Numeric columns can be converted to numbers.",
+      "details": {
+        "columns": [
+          {
+            "column": "temperature_c",
+            "invalid_count": 0,
+            "invalid_examples": [],
+            "status": "PASS"
+          },
+          {
+            "column": "pressure_bar",
+            "invalid_count": 0,
+            "invalid_examples": [],
+            "status": "PASS"
+          },
+          {
+            "column": "cycle_time_s",
+            "invalid_count": 0,
+            "invalid_examples": [],
+            "status": "PASS"
+          },
+          {
+            "column": "operator_experience_years",
+            "invalid_count": 0,
+            "invalid_examples": [],
+            "status": "PASS"
+          },
+          {
+            "column": "vibration_mm_s",
+            "invalid_count": 0,
+            "invalid_examples": [],
+            "status": "PASS"
+          },
+          {
+            "column": "humidity_percent",
+            "invalid_count": 0,
+            "invalid_examples": [],
+            "status": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "target_validation",
+      "status": "PASS",
+      "message": "Target column contains only 0 and 1 values.",
+      "details": {
+        "target_column": "scrap",
+        "total_rows": 5000,
+        "good_count": 4642,
+        "scrap_count": 358,
+        "scrap_rate": 0.0716,
+        "invalid_values": []
+      }
+    },
+    {
+      "name": "categorical_validation",
+      "status": "PASS",
+      "message": "Categorical values match expected categories.",
+      "details": {
+        "columns": [
+          {
+            "column": "machine_id",
+            "expected_values": [
+              "M1",
+              "M2",
+              "M3",
+              "M4"
+            ],
+            "unexpected_values": [],
+            "status": "PASS"
+          },
+          {
+            "column": "shift",
+            "expected_values": [
+              "early",
+              "late",
+              "night"
+            ],
+            "unexpected_values": [],
+            "status": "PASS"
+          },
+          {
+            "column": "material_batch",
+            "expected_values": [
+              "B1",
+              "B2",
+              "B3",
+              "B4",
+              "B5"
+            ],
+            "unexpected_values": [],
+            "status": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "engineering_plausibility",
+      "status": "PASS",
+      "message": "Numeric values are within illustrative engineering ranges.",
+      "details": {
+        "columns": [
+          {
+            "column": "temperature_c",
+            "minimum": 160,
+            "maximum": 210,
+            "below_range_count": 0,
+            "above_range_count": 0,
+            "outside_range_count": 0,
+            "status": "PASS"
+          },
+          {
+            "column": "pressure_bar",
+            "minimum": 4.0,
+            "maximum": 7.5,
+            "below_range_count": 0,
+            "above_range_count": 0,
+            "outside_range_count": 0,
+            "status": "PASS"
+          },
+          {
+            "column": "cycle_time_s",
+            "minimum": 30,
+            "maximum": 70,
+            "below_range_count": 0,
+            "above_range_count": 0,
+            "outside_range_count": 0,
+            "status": "PASS"
+          },
+          {
+            "column": "operator_experience_years",
+            "minimum": 0,
+            "maximum": 20,
+            "below_range_count": 0,
+            "above_range_count": 0,
+            "outside_range_count": 0,
+            "status": "PASS"
+          },
+          {
+            "column": "vibration_mm_s",
+            "minimum": 0,
+            "maximum": 6,
+            "below_range_count": 0,
+            "above_range_count": 0,
+            "outside_range_count": 0,
+            "status": "PASS"
+          },
+          {
+            "column": "humidity_percent",
+            "minimum": 0,
+            "maximum": 100,
+            "below_range_count": 0,
+            "above_range_count": 0,
+            "outside_range_count": 0,
+            "status": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicate_part_id",
+      "status": "PASS",
+      "message": "No duplicate part_id values found.",
+      "details": {
+        "duplicate_row_count": 0,
+        "duplicate_examples": []
+      }
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}

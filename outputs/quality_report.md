@@ -192,29 +192,29 @@ The prediction export includes **2,291 elevated-risk rows with root cause analys
 
 ### Most Recurring Root Cause Drivers
 
-- Machine M2 Risk Pattern: 1115 elevated-risk rows
-- Material Batch B4: 593 elevated-risk rows
-- Elevated Vibration: 539 elevated-risk rows
-- Night Shift Production: 516 elevated-risk rows
-- Late Shift Production: 488 elevated-risk rows
+- Elevated Vibration: 911 elevated-risk rows
+- Machine M2 Risk Pattern: 848 elevated-risk rows
+- High Temperature: 582 elevated-risk rows
+- Long Cycle Time: 556 elevated-risk rows
+- Material Batch B4: 510 elevated-risk rows
 
 ### Representative High-Risk Parts / Batches
 
-| part_id   | scrap_probability   | predicted_scrap_risk   | root_cause_summary                                                                                                |
-|:----------|:--------------------|:-----------------------|:------------------------------------------------------------------------------------------------------------------|
-| P000977   | 81.09%              | High                   | The batch shows high scrap risk mainly due to very high temperature, high vibration, and machine m2 risk pattern. |
-| P002546   | 80.21%              | High                   | The batch shows high scrap risk mainly due to very high temperature, high vibration, and machine m2 risk pattern. |
-| P001643   | 78.02%              | High                   | The batch shows high scrap risk mainly due to high vibration, long cycle time, and machine m2 risk pattern.       |
-| P003015   | 77.29%              | High                   | The batch shows high scrap risk mainly due to very high temperature, abnormal cycle time, and elevated vibration. |
-| P004071   | 77.00%              | High                   | The batch shows high scrap risk mainly due to high vibration, high temperature, and long cycle time.              |
+| part_id   | scrap_probability   | predicted_scrap_risk   | root_cause_summary                                                                                              |
+|:----------|:--------------------|:-----------------------|:----------------------------------------------------------------------------------------------------------------|
+| P000977   | 81.09%              | High                   | The batch shows high scrap risk mainly due to very high temperature, high vibration, and high temperature.      |
+| P002546   | 80.21%              | High                   | The batch shows high scrap risk mainly due to very high temperature, high vibration, and high temperature.      |
+| P001643   | 78.02%              | High                   | The batch shows high scrap risk mainly due to high vibration, elevated vibration, and long cycle time.          |
+| P003015   | 77.29%              | High                   | The batch shows high scrap risk mainly due to very high temperature, abnormal cycle time, and high temperature. |
+| P004071   | 77.00%              | High                   | The batch shows high scrap risk mainly due to high vibration, high temperature, and elevated vibration.         |
 
 ### Concise Engineering Actions
 
 - Inspect M2 calibration, maintenance status, and recent quality history.
+- Trend vibration for the machine and inspect tooling if the signal persists.
 - Review shift handoff notes and confirm standard work adherence.
 - Quarantine or sample-check material batch B4 and compare against supplier lot history.
-- Apply additional process checks during night shift production.
-- Trend vibration for the machine and inspect tooling if the signal persists.
+- Review cycle time drift and compare against recent setup or operator changes.
 
 ---
 
