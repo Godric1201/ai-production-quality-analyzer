@@ -100,6 +100,10 @@ function splitListText(value) {
     return [];
   }
 
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+
   return String(value)
     .split(/[;,]/)
     .map((item) => item.trim())
@@ -122,15 +126,40 @@ function formatLimitedList(value, limit = 3, moreLabel = "more") {
   return visibleItems.join("\n");
 }
 
-function formatRequirementChips(value, limit = 3) {
+function formatRequirementLabel(value) {
+  const mapping = {
+    TEMP_MAX_WARNING: "Temperature warning",
+    TEMP_MAX_CRITICAL: "Temperature critical",
+    VIBRATION_MAX_WARNING: "Vibration warning",
+    VIBRATION_MAX_CRITICAL: "Vibration critical",
+    CYCLE_TIME_MAX_WARNING: "Cycle-time warning",
+    CYCLE_TIME_MAX_CRITICAL: "Cycle-time critical",
+    PRESSURE_MIN_WARNING: "Low pressure warning",
+    PRESSURE_MAX_WARNING: "High pressure warning",
+    HUMIDITY_MAX_WARNING: "Humidity warning",
+    LOW_OPERATOR_EXPERIENCE_WARNING: "Operator support warning",
+  };
+
+  if (!value) {
+    return "Not available";
+  }
+
+  return mapping[value] || formatEnumLabel(value);
+}
+
+function formatRequirementList(value, limit = 4) {
   const items = splitListText(value);
   if (items.length === 0) {
     return [];
   }
 
-  const visibleItems = items.slice(0, limit);
+  const visibleItems = items.slice(0, limit).map(formatRequirementLabel);
   const remainingCount = items.length - visibleItems.length;
   return remainingCount > 0 ? [...visibleItems, `+${remainingCount} more`] : visibleItems;
+}
+
+function formatRequirementChips(value, limit = 4) {
+  return formatRequirementList(value, limit);
 }
 
 function formatDriverChipText(value) {
@@ -149,13 +178,13 @@ function formatDriverChips(value, limit = 3) {
     .filter(Boolean);
 }
 
-function formatTraceActions(value, limit = 2) {
+function formatActionList(value, limit = 2) {
   const items = splitListText(value);
   if (items.length === 0) {
     return "None";
   }
 
-  const visibleItems = items.slice(0, limit).map((item) => truncateTraceText(item, 86));
+  const visibleItems = items.slice(0, limit).map((item) => `- ${truncateTraceText(item, 86)}`);
   const remainingCount = items.length - visibleItems.length;
 
   if (remainingCount > 0) {
@@ -163,6 +192,10 @@ function formatTraceActions(value, limit = 2) {
   }
 
   return visibleItems.join("\n");
+}
+
+function formatTraceActions(value, limit = 2) {
+  return formatActionList(value, limit);
 }
 
 function joinDisplayList(items) {
@@ -173,28 +206,41 @@ function joinDisplayList(items) {
   return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
 }
 
-function formatViolationSummary(value) {
+function summarizeRequirementLabels(labels) {
+  const readableLabels = splitListText(labels)
+    .filter((label) => !label.startsWith("+"))
+    .map((label) =>
+      label
+        .replace(/\s+(warning|critical)$/i, "")
+        .replace(/^low pressure$/i, "pressure")
+        .replace(/^high pressure$/i, "pressure")
+        .replace(/-/g, " ")
+        .toLowerCase()
+    )
+    .filter(Boolean);
+  const uniqueChecks = [...new Set(readableLabels)];
+
+  if (uniqueChecks.length === 0) {
+    return "None";
+  }
+
+  const summaryText = joinDisplayList(uniqueChecks);
+  return `${summaryText.charAt(0).toUpperCase()}${summaryText.slice(
+    1
+  )} checks fell outside configured process limits.`;
+}
+
+function formatViolationSummary(value, requirementIds = "") {
+  const requirementLabels = formatRequirementList(requirementIds, 99);
+  const labelSummary = summarizeRequirementLabels(requirementLabels);
+  if (labelSummary !== "None") {
+    return labelSummary;
+  }
+
   const text = formatValue(value, "").trim();
   if (!text) {
     return "None";
   }
-
-  const checks = [
-    { pattern: /temperature/i, label: "temperature" },
-    { pattern: /vibration/i, label: "vibration" },
-    { pattern: /cycle[_\s-]*time/i, label: "cycle time" },
-    { pattern: /pressure/i, label: "pressure" },
-    { pattern: /humidity/i, label: "humidity" },
-    { pattern: /operator/i, label: "operator experience" },
-  ];
-  const affectedAreas = checks
-    .filter((check) => check.pattern.test(text))
-    .map((check) => check.label);
-
-  if (affectedAreas.length > 0) {
-    return `${joinDisplayList(affectedAreas)} fell outside configured process limits.`;
-  }
-
   return truncateTraceText(text, 150);
 }
 
@@ -543,16 +589,19 @@ function renderCaseTrace(caseTrace = {}) {
     },
     {
       label: "Violated requirements",
-      chips: formatRequirementChips(safeGet(spec, ["violated_requirement_ids"], ""), 3),
+      chips: formatRequirementList(safeGet(spec, ["violated_requirement_ids"], ""), 4),
       value: "None",
     },
     {
       label: "Violation summary",
-      value: formatViolationSummary(safeGet(spec, ["violation_summary"], "None")),
+      value: formatViolationSummary(
+        safeGet(spec, ["violation_summary"], "None"),
+        safeGet(spec, ["violated_requirement_ids"], "")
+      ),
     },
     {
       label: "Recommended actions",
-      value: formatTraceActions(safeGet(spec, ["recommended_actions"], ""), 2),
+      value: formatActionList(safeGet(spec, ["recommended_actions"], ""), 2),
     },
   ]);
 
@@ -575,7 +624,7 @@ function renderCaseTrace(caseTrace = {}) {
     },
   ]);
 
-  setText("traceSummary", truncateTraceText(caseTrace.trace_summary, 520));
+  setText("traceSummary", truncateTraceText(caseTrace.trace_summary, 600));
 }
 
 function renderRecommendations(recommendations) {

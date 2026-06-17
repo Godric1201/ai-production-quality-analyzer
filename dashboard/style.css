@@ -310,15 +310,15 @@ h1 {
 
 .case-trace-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
-  gap: 14px;
+  gap: 16px;
 }
 
 .case-trace-block {
   display: flex;
-  min-height: 315px;
-  padding: 17px;
+  min-height: 275px;
+  padding: 18px;
   flex-direction: column;
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -368,16 +368,16 @@ h1 {
 .trace-metric-list .trace-chip-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 7px;
   white-space: normal;
 }
 
 .trace-metric-list .trace-chip {
   display: inline-flex;
   align-items: center;
-  max-width: 180px;
+  max-width: 100%;
   margin-bottom: 0;
-  padding: 4px 8px;
+  padding: 5px 9px;
   border: 1px solid rgba(56, 189, 248, 0.25);
   border-radius: 999px;
   background: rgba(56, 189, 248, 0.1);
@@ -386,9 +386,11 @@ h1 {
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.2;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   text-align: left;
   text-transform: none;
+  white-space: normal;
+  word-break: normal;
 }
 
 .case-trace-summary {
