@@ -252,6 +252,101 @@ h1 {
   line-height: 1.45;
 }
 
+.case-trace-section {
+  margin-bottom: 16px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(17, 24, 39, 0.76);
+  box-shadow: var(--shadow);
+}
+
+.case-trace-header {
+  display: grid;
+  grid-template-columns: 1.1fr repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 18px;
+  background: rgba(56, 189, 248, 0.07);
+}
+
+.case-trace-header span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.case-trace-header strong {
+  display: block;
+  font-size: 0.98rem;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.case-trace-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.case-trace-block {
+  min-height: 260px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(31, 41, 55, 0.48);
+}
+
+.case-trace-block h3 {
+  margin: 0 0 12px;
+  font-size: 0.98rem;
+}
+
+.trace-metric-list {
+  display: grid;
+  gap: 8px;
+}
+
+.trace-metric-list div {
+  padding: 9px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.trace-metric-list span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.trace-metric-list strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.38;
+}
+
+.case-trace-summary {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(52, 211, 153, 0.24);
+  border-radius: 16px;
+  background: rgba(52, 211, 153, 0.07);
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -803,6 +898,8 @@ canvas {
   .kpi-grid,
   .rca-summary-grid,
   .workflow-overview-grid,
+  .case-trace-header,
+  .case-trace-grid,
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
