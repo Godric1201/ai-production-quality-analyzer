@@ -5,6 +5,11 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 README_PATH = PROJECT_ROOT / "README.md"
+CURRENT_SCREENSHOTS = [
+    "docs/screenshots/dashboard-workflow-overview.png",
+    "docs/screenshots/engineering-rulebook-model-evaluation.png",
+    "docs/screenshots/engineering-review-trace.png",
+]
 
 
 def read_readme() -> str:
@@ -40,6 +45,14 @@ def test_readme_contains_dashboard_visuals_or_placeholder() -> None:
     ), "README.md should include dashboard images or a clear screenshot placeholder."
 
 
+def test_readme_references_current_dashboard_screenshots() -> None:
+    readme = read_readme()
+
+    for screenshot in CURRENT_SCREENSHOTS:
+        assert screenshot in readme, f"{screenshot} missing from README.md."
+        assert (PROJECT_ROOT / screenshot).exists(), f"{screenshot} does not exist."
+
+
 def test_readme_is_honest_about_limitations() -> None:
     readme = read_readme()
 
@@ -73,6 +86,7 @@ def main() -> None:
     tests = [
         test_readme_contains_portfolio_positioning,
         test_readme_contains_dashboard_visuals_or_placeholder,
+        test_readme_references_current_dashboard_screenshots,
         test_readme_is_honest_about_limitations,
         test_readme_describes_industrial_ai_workflow,
     ]
