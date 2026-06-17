@@ -88,11 +88,27 @@ def test_trace_layout_polish() -> None:
     assert "traceSummary\", truncateTraceText(caseTrace.trace_summary, 300)" not in app_js
     assert "+${remainingCount} more" in app_js
     assert "+${remainingCount} more actions" in app_js
-    assert "formatRequirementChips" in app_js
-    assert "formatTraceActions" in app_js
+    assert "formatRequirementLabel" in app_js
+    assert "formatRequirementList" in app_js
+    assert "formatActionList" in app_js
     assert "formatViolationSummary" in app_js
     assert "case-trace-header strong:not(#tracePartId)" in style_css
-    assert "min-height: 315px" in style_css
+    assert "grid-template-columns: repeat(2, minmax(0, 1fr))" in style_css
+    assert "word-break: normal" in style_css
+
+
+def test_trace_requirement_labels() -> None:
+    app_js = APP_PATH.read_text(encoding="utf-8")
+
+    for raw_value, display_label in [
+        ("VIBRATION_MAX_WARNING", "Vibration warning"),
+        ("TEMP_MAX_CRITICAL", "Temperature critical"),
+    ]:
+        assert raw_value in app_js, f"{raw_value} missing from requirement mapping."
+        assert display_label in app_js, f"{display_label} missing from requirement mapping."
+
+    assert "summarizeRequirementLabels" in app_js
+    assert "configured process limits" in app_js
 
 
 def main() -> None:
@@ -101,6 +117,7 @@ def main() -> None:
         test_dashboard_files_reference_trace,
         test_trace_label_polish,
         test_trace_layout_polish,
+        test_trace_requirement_labels,
     ]
 
     for test in tests:
