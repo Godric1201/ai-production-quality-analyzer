@@ -739,6 +739,318 @@
       }
     }
   },
+  "engineering_rulebook": {
+    "summary": {
+      "spec_requirement_count": 10,
+      "rca_rule_count": 16,
+      "source_files": [
+        "config/spec_requirements.yaml",
+        "config/rca_rules.yaml"
+      ],
+      "source_type": "YAML configuration",
+      "note": "Rules are loaded from configuration files and used for decision support."
+    },
+    "spec_requirements": [
+      {
+        "id": "TEMP_MAX_WARNING",
+        "label": "Temperature warning",
+        "category": "Temperature",
+        "signal": "temperature_c",
+        "signal_label": "Temperature",
+        "condition": "<= 190 C",
+        "severity": "Warning",
+        "description": "Process temperature should remain within the normal operating window.",
+        "rationale": "Elevated temperature may indicate thermal drift or insufficient cooling control.",
+        "recommended_action": "Review temperature control and cooling stability for affected records."
+      },
+      {
+        "id": "TEMP_MAX_CRITICAL",
+        "label": "Temperature critical",
+        "category": "Temperature",
+        "signal": "temperature_c",
+        "signal_label": "Temperature",
+        "condition": "<= 195 C",
+        "severity": "Critical",
+        "description": "Process temperature should not exceed the critical monitoring limit.",
+        "rationale": "Very high temperature may increase scrap risk or indicate process instability.",
+        "recommended_action": "Escalate for engineering review and check thermal process settings."
+      },
+      {
+        "id": "VIBRATION_MAX_WARNING",
+        "label": "Vibration warning",
+        "category": "Vibration",
+        "signal": "vibration_mm_s",
+        "signal_label": "Vibration",
+        "condition": "<= 2.7 mm/s",
+        "severity": "Warning",
+        "description": "Vibration should remain within the normal monitoring band.",
+        "rationale": "Elevated vibration may indicate early tool wear, fixture instability, or imbalance.",
+        "recommended_action": "Trend vibration and inspect tooling if the signal persists."
+      },
+      {
+        "id": "VIBRATION_MAX_CRITICAL",
+        "label": "Vibration critical",
+        "category": "Vibration",
+        "signal": "vibration_mm_s",
+        "signal_label": "Vibration",
+        "condition": "<= 3.1 mm/s",
+        "severity": "Critical",
+        "description": "Vibration should not exceed the critical inspection threshold.",
+        "rationale": "High vibration may indicate mechanical instability or maintenance issues.",
+        "recommended_action": "Perform engineering review of machine condition, tooling, and fixture stability."
+      },
+      {
+        "id": "CYCLE_TIME_MAX_WARNING",
+        "label": "Cycle-time warning",
+        "category": "Cycle time",
+        "signal": "cycle_time_s",
+        "signal_label": "Cycle time",
+        "condition": "<= 50 s",
+        "severity": "Warning",
+        "description": "Cycle time should remain within the expected process window.",
+        "rationale": "Long cycle time may indicate setup drift, handling delay, or process instability.",
+        "recommended_action": "Compare against setup records and operator notes."
+      },
+      {
+        "id": "CYCLE_TIME_MAX_CRITICAL",
+        "label": "Cycle-time critical",
+        "category": "Cycle time",
+        "signal": "cycle_time_s",
+        "signal_label": "Cycle time",
+        "condition": "<= 53 s",
+        "severity": "Critical",
+        "description": "Cycle time should not materially exceed the critical monitoring limit.",
+        "rationale": "Abnormal cycle time may indicate machine wear, unstable settings, or material handling problems.",
+        "recommended_action": "Investigate machine condition and recent setup changes."
+      },
+      {
+        "id": "PRESSURE_MIN_WARNING",
+        "label": "Low pressure warning",
+        "category": "Pressure",
+        "signal": "pressure_bar",
+        "signal_label": "Pressure",
+        "condition": ">= 5.1 bar",
+        "severity": "Warning",
+        "description": "Process pressure should not fall below the lower monitoring band.",
+        "rationale": "Low pressure may indicate leakage, feed variation, or insufficient process force.",
+        "recommended_action": "Check pressure regulation, fixture condition, and feed stability."
+      },
+      {
+        "id": "PRESSURE_MAX_WARNING",
+        "label": "High pressure warning",
+        "category": "Pressure",
+        "signal": "pressure_bar",
+        "signal_label": "Pressure",
+        "condition": "<= 6.4 bar",
+        "severity": "Warning",
+        "description": "Process pressure should not exceed the upper monitoring band.",
+        "rationale": "High pressure may indicate restriction, blocked flow path, or aggressive process settings.",
+        "recommended_action": "Inspect pressure regulation and tooling restrictions."
+      },
+      {
+        "id": "HUMIDITY_MAX_WARNING",
+        "label": "Humidity warning",
+        "category": "Humidity",
+        "signal": "humidity_percent",
+        "signal_label": "Humidity",
+        "condition": "<= 60 %",
+        "severity": "Warning",
+        "description": "Humidity should remain within the configured environmental monitoring band.",
+        "rationale": "High humidity may affect material behavior, handling, or surface quality.",
+        "recommended_action": "Check humidity controls and material storage conditions."
+      },
+      {
+        "id": "LOW_OPERATOR_EXPERIENCE_WARNING",
+        "label": "Operator support warning",
+        "category": "Operator experience",
+        "signal": "operator_experience_years",
+        "signal_label": "Operator experience",
+        "condition": ">= 2 years",
+        "severity": "Warning",
+        "description": "Low-experience operation should receive additional process guidance.",
+        "rationale": "Less experienced operators may need checklist support during unstable process conditions.",
+        "recommended_action": "Use operator guidance, checklist support, or supervisor review."
+      }
+    ],
+    "rca_rules": [
+      {
+        "id": "very_high_temperature",
+        "label": "Very high temperature",
+        "category": "Temperature",
+        "signal": "temperature_c",
+        "condition": ">= 195 C",
+        "severity": "Critical",
+        "possible_cause": "Potential thermal drift, overheating, resin degradation, or process setpoint issue.",
+        "evidence": "temperature is well above the configured risk threshold",
+        "recommended_action": "Audit temperature setpoints, cooling performance, and recent thermal alarms before further review action."
+      },
+      {
+        "id": "high_temperature",
+        "label": "High temperature",
+        "category": "Temperature",
+        "signal": "temperature_c",
+        "condition": "> 190 C",
+        "severity": "Warning",
+        "possible_cause": "Possible thermal process drift or insufficient cooling control.",
+        "evidence": "temperature is above the configured risk threshold",
+        "recommended_action": "Review process temperature control and verify cooling stability around the affected batch."
+      },
+      {
+        "id": "low_temperature",
+        "label": "Low temperature",
+        "category": "Temperature",
+        "signal": "temperature_c",
+        "condition": "< 175 C",
+        "severity": "Warning",
+        "possible_cause": "Possible under-heating, poor material flow, or incomplete process stabilization.",
+        "evidence": "temperature is below the expected operating range",
+        "recommended_action": "Check heating stability, warm-up completion, and material flow conditions."
+      },
+      {
+        "id": "high_pressure",
+        "label": "High pressure",
+        "category": "Pressure",
+        "signal": "pressure_bar",
+        "condition": ">= 6.4 bar",
+        "severity": "Warning",
+        "possible_cause": "Possible restriction, blocked flow path, fixture issue, or aggressive process setting.",
+        "evidence": "pressure is above the expected operating range",
+        "recommended_action": "Inspect pressure regulation, tooling restrictions, and fixture condition."
+      },
+      {
+        "id": "low_pressure",
+        "label": "Low pressure",
+        "category": "Pressure",
+        "signal": "pressure_bar",
+        "condition": "<= 5.1 bar",
+        "severity": "Warning",
+        "possible_cause": "Possible leakage, poor clamping, feed variation, or insufficient process force.",
+        "evidence": "pressure is below the expected operating range",
+        "recommended_action": "Check for leaks, feed variation, clamp issues, or insufficient process force."
+      },
+      {
+        "id": "high_vibration",
+        "label": "High vibration",
+        "category": "Vibration",
+        "signal": "vibration_mm_s",
+        "condition": ">= 3.1 mm/s",
+        "severity": "Critical",
+        "possible_cause": "Possible mechanical instability, tool wear, imbalance, or maintenance issue.",
+        "evidence": "vibration is above the configured risk threshold",
+        "recommended_action": "Inspect machine vibration sources and check for tool wear, imbalance, or loose fixtures."
+      },
+      {
+        "id": "elevated_vibration",
+        "label": "Elevated vibration",
+        "category": "Vibration",
+        "signal": "vibration_mm_s",
+        "condition": "> 2.7 mm/s",
+        "severity": "Warning",
+        "possible_cause": "Potential early signal of tool wear, loose fixtures, or machine imbalance.",
+        "evidence": "vibration is above the normal monitoring band",
+        "recommended_action": "Trend vibration for the machine and inspect tooling if the signal persists."
+      },
+      {
+        "id": "abnormal_cycle_time",
+        "label": "Abnormal cycle time",
+        "category": "Cycle time",
+        "signal": "cycle_time_s",
+        "condition": ">= 53 s",
+        "severity": "Critical",
+        "possible_cause": "Possible process slowdown, material handling delay, machine wear, or unstable settings.",
+        "evidence": "cycle time is materially above the configured risk threshold",
+        "recommended_action": "Investigate cycle time deviation, material handling delays, and machine wear indicators."
+      },
+      {
+        "id": "long_cycle_time",
+        "label": "Long cycle time",
+        "category": "Cycle time",
+        "signal": "cycle_time_s",
+        "condition": "> 50 s",
+        "severity": "Warning",
+        "possible_cause": "Possible setup drift, slower material flow, or operator intervention during the batch.",
+        "evidence": "cycle time is above the configured risk threshold",
+        "recommended_action": "Review cycle time drift and compare against recent setup or operator changes."
+      },
+      {
+        "id": "low_operator_experience",
+        "label": "Low operator experience",
+        "category": "Operator experience",
+        "signal": "operator_experience_years",
+        "condition": "< 2 years",
+        "severity": "Warning",
+        "possible_cause": "Additional checklist support or supervisor review may reduce setup and handling variation.",
+        "evidence": "operator experience is below 2 years",
+        "recommended_action": "Use operator guidance, checklist support, or supervisor sign-off for this setup."
+      },
+      {
+        "id": "high_humidity",
+        "label": "High humidity",
+        "category": "Humidity",
+        "signal": "humidity_percent",
+        "condition": "> 60 %",
+        "severity": "Monitoring",
+        "possible_cause": "Possible environmental contribution to material behavior, handling, or surface quality.",
+        "evidence": "humidity is above the configured monitoring band",
+        "recommended_action": "Check humidity controls and confirm material storage conditions."
+      },
+      {
+        "id": "machine_m2_risk_pattern",
+        "label": "Machine M2 risk pattern",
+        "category": "Machine",
+        "signal": "machine_id",
+        "condition": "matches M2, Machine 2",
+        "severity": "Warning",
+        "possible_cause": "This asset may need calibration review, maintenance inspection, or process capability checks.",
+        "evidence": "machine is M2, which is configured as a higher-risk asset",
+        "recommended_action": "Inspect M2 calibration, maintenance status, and recent quality history."
+      },
+      {
+        "id": "machine_m4_risk_pattern",
+        "label": "Machine M4 risk pattern",
+        "category": "Machine",
+        "signal": "machine_id",
+        "condition": "matches M4, Machine 4",
+        "severity": "Monitoring",
+        "possible_cause": "Monitor for recurring variation before scheduling deeper engineering action.",
+        "evidence": "machine is M4, which carries a mild configured risk signal",
+        "recommended_action": "Monitor M4 quality trend and confirm process settings remain within control limits."
+      },
+      {
+        "id": "night_shift_production",
+        "label": "Night shift production",
+        "category": "Shift",
+        "signal": "shift",
+        "condition": "matches night",
+        "severity": "Warning",
+        "possible_cause": "Higher scrap risk may reflect staffing, handoff, environmental, or monitoring differences.",
+        "evidence": "batch was produced during night shift",
+        "recommended_action": "Apply additional process checks during night shift production."
+      },
+      {
+        "id": "late_shift_production",
+        "label": "Late shift production",
+        "category": "Shift",
+        "signal": "shift",
+        "condition": "matches late",
+        "severity": "Monitoring",
+        "possible_cause": "Consider checking shift handoff notes and process adherence if this pattern repeats.",
+        "evidence": "batch was produced during late shift",
+        "recommended_action": "Review shift handoff notes and confirm standard work adherence."
+      },
+      {
+        "id": "material_batch_b4",
+        "label": "Material batch B4",
+        "category": "Material batch",
+        "signal": "material_batch",
+        "condition": "matches B4, batch B4, material B4",
+        "severity": "Warning",
+        "possible_cause": "Possible incoming material variation, storage condition issue, or supplier lot effect.",
+        "evidence": "material batch is B4, which is configured as a higher-risk batch",
+        "recommended_action": "Quarantine or sample-check material batch B4 and compare against supplier lot history."
+      }
+    ]
+  },
   "case_trace": {
     "part_id": "NB000001",
     "input_conditions": {

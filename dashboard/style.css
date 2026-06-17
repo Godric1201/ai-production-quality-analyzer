@@ -252,6 +252,141 @@ h1 {
   line-height: 1.45;
 }
 
+.rulebook-section {
+  margin-bottom: 16px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(17, 24, 39, 0.76);
+  box-shadow: var(--shadow);
+}
+
+.rulebook-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.rulebook-summary-card,
+.rulebook-panel {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(31, 41, 55, 0.48);
+}
+
+.rulebook-summary-card {
+  min-height: 132px;
+  padding: 16px;
+}
+
+.rulebook-summary-card strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--text);
+  font-size: 1.55rem;
+  letter-spacing: -0.03em;
+}
+
+.rulebook-summary-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.rulebook-tables {
+  display: grid;
+  gap: 16px;
+}
+
+.rulebook-panel {
+  padding: 16px;
+}
+
+.rulebook-panel h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+
+.rulebook-table-wrap {
+  overflow-x: auto;
+}
+
+.rulebook-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+
+.rulebook-table th,
+.rulebook-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  text-align: left;
+  vertical-align: top;
+}
+
+.rulebook-table th {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rulebook-table td {
+  color: var(--text);
+  font-size: 0.86rem;
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.44);
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.severity-critical {
+  border-color: rgba(251, 113, 133, 0.32);
+  color: #fecdd3;
+}
+
+.severity-warning {
+  border-color: rgba(251, 191, 36, 0.32);
+  color: #fde68a;
+}
+
+.severity-monitoring {
+  border-color: rgba(56, 189, 248, 0.32);
+  color: #bae6fd;
+}
+
+.severity-info {
+  border-color: rgba(148, 163, 184, 0.24);
+  color: var(--muted);
+}
+
+.prototype-note {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 16px;
+  background: rgba(52, 211, 153, 0.06);
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .case-trace-section {
   margin-bottom: 16px;
   padding: 22px;
@@ -956,6 +1091,7 @@ canvas {
   .kpi-grid,
   .rca-summary-grid,
   .workflow-overview-grid,
+  .rulebook-summary-grid,
   .case-trace-header,
   .case-trace-grid,
   .dashboard-grid {
