@@ -168,6 +168,25 @@ Then open:
 http://localhost:8000/dashboard/
 ```
 
+## Static Dashboard Demo
+
+The dashboard can be run locally:
+
+```bash
+python src/run_pipeline.py
+python -m http.server 8000
+```
+
+Open:
+
+```text
+http://localhost:8000/dashboard/
+```
+
+The repository also includes a GitHub Pages workflow that deploys the static dashboard from the generated dashboard files as a static portfolio demo.
+
+Note: GitHub Pages must be enabled in the repository settings with GitHub Actions as the deployment source. The dashboard uses generated demonstration data and is not a validated production system.
+
 ## Useful Individual Commands
 
 ```bash
