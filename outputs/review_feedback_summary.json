@@ -1,0 +1,108 @@
+{
+  "review_results_path": "outputs\\batch_review_results.csv",
+  "feedback_path": "data\\batch_review_feedback.csv",
+  "row_count": 10,
+  "feedback_coverage": {
+    "review_rows": 10,
+    "feedback_rows": 10,
+    "matched_rows": 10,
+    "missing_feedback_rows": 0,
+    "extra_feedback_rows": 0
+  },
+  "classification_counts": {
+    "FALSE_ALARM_REVIEW": 1,
+    "MISSED_ISSUE": 1,
+    "TRUE_NEGATIVE_MONITORING": 5,
+    "TRUE_POSITIVE_REVIEW": 3
+  },
+  "review_effectiveness": {
+    "actual_issue_count": 4,
+    "review_required_count": 4,
+    "missed_issue_count": 1,
+    "false_alarm_count": 1,
+    "issue_capture_rate": 0.75,
+    "false_alarm_rate_among_reviews": 0.25
+  },
+  "driver_summary_for_confirmed_issues": [
+    {
+      "driver": "Elevated vibration",
+      "count": 2
+    },
+    {
+      "driver": "High temperature",
+      "count": 2
+    },
+    {
+      "driver": "Abnormal cycle time",
+      "count": 1
+    },
+    {
+      "driver": "High vibration",
+      "count": 1
+    },
+    {
+      "driver": "Long cycle time",
+      "count": 1
+    },
+    {
+      "driver": "Low pressure",
+      "count": 1
+    },
+    {
+      "driver": "Machine M2 risk pattern",
+      "count": 1
+    },
+    {
+      "driver": "Night shift production",
+      "count": 1
+    },
+    {
+      "driver": "Very high temperature",
+      "count": 1
+    }
+  ],
+  "threshold_scenarios": [
+    {
+      "threshold": 0.3,
+      "true_positive_reviews": 3,
+      "false_alarm_reviews": 2,
+      "missed_issues": 1,
+      "true_negative_monitoring": 4,
+      "review_required_count": 5,
+      "issue_capture_rate": 0.75,
+      "false_alarm_rate_among_reviews": 0.4
+    },
+    {
+      "threshold": 0.4,
+      "true_positive_reviews": 3,
+      "false_alarm_reviews": 1,
+      "missed_issues": 1,
+      "true_negative_monitoring": 5,
+      "review_required_count": 4,
+      "issue_capture_rate": 0.75,
+      "false_alarm_rate_among_reviews": 0.25
+    },
+    {
+      "threshold": 0.5,
+      "true_positive_reviews": 2,
+      "false_alarm_reviews": 0,
+      "missed_issues": 2,
+      "true_negative_monitoring": 6,
+      "review_required_count": 2,
+      "issue_capture_rate": 0.5,
+      "false_alarm_rate_among_reviews": 0.0
+    },
+    {
+      "threshold": 0.6,
+      "true_positive_reviews": 1,
+      "false_alarm_reviews": 0,
+      "missed_issues": 3,
+      "true_negative_monitoring": 6,
+      "review_required_count": 1,
+      "issue_capture_rate": 0.25,
+      "false_alarm_rate_among_reviews": 0.0
+    }
+  ],
+  "warnings": [],
+  "note": "Synthetic feedback loop for portfolio-prototype industrial AI decision support; not a validated factory quality system."
+}

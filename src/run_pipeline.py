@@ -34,6 +34,10 @@ PIPELINE_STEPS = [
         "script": PROJECT_ROOT / "src" / "review_batch.py",
     },
     {
+        "name": "Evaluate review feedback",
+        "script": PROJECT_ROOT / "src" / "evaluate_review_feedback.py",
+    },
+    {
         "name": "Export dashboard data",
         "script": PROJECT_ROOT / "src" / "export_dashboard_data.py",
     },
@@ -97,6 +101,9 @@ def print_output_summary() -> None:
         PROJECT_ROOT / "outputs" / "batch_review_results.csv",
         PROJECT_ROOT / "outputs" / "batch_review_summary.json",
         PROJECT_ROOT / "outputs" / "batch_review_report.md",
+        PROJECT_ROOT / "outputs" / "review_feedback_cases.csv",
+        PROJECT_ROOT / "outputs" / "review_feedback_summary.json",
+        PROJECT_ROOT / "outputs" / "review_feedback_report.md",
         PROJECT_ROOT / "outputs" / "prediction_results.csv",
         PROJECT_ROOT / "dashboard" / "dashboard_data.json",
         PROJECT_ROOT / "outputs" / "quality_report.md",
