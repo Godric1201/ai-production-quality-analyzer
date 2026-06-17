@@ -61,10 +61,29 @@ def test_dashboard_files_reference_trace() -> None:
     assert "case-trace" in style_css
 
 
+def test_trace_label_polish() -> None:
+    app_js = APP_PATH.read_text(encoding="utf-8")
+    style_css = STYLE_PATH.read_text(encoding="utf-8")
+
+    for raw_value, display_label in [
+        ("ENGINEERING_REVIEW_REQUIRED", "Review Required"),
+        ("TRUE_POSITIVE_REVIEW", "Confirmed Issue"),
+        ("CRITICAL_VIOLATION", "Critical Violation"),
+    ]:
+        assert raw_value in app_js, f"{raw_value} missing from trace label mapping."
+        assert display_label in app_js, f"{display_label} missing from trace label mapping."
+
+    assert "\\u00b7" in app_js, "Trace risk display should use a centered-dot separator."
+    assert "High - " not in app_js, "Trace risk display should not use a hyphen separator."
+    assert "trace-chip" in style_css, "Trace driver chip styling missing."
+    assert "overflow-wrap" in style_css, "Trace wrapping styling missing."
+
+
 def main() -> None:
     tests = [
         test_case_trace_data,
         test_dashboard_files_reference_trace,
+        test_trace_label_polish,
     ]
 
     for test in tests:
