@@ -34,6 +34,10 @@ PIPELINE_STEPS = [
         "script": PROJECT_ROOT / "src" / "review_batch.py",
     },
     {
+        "name": "Check engineering specification compliance",
+        "script": PROJECT_ROOT / "src" / "check_spec_compliance.py",
+    },
+    {
         "name": "Evaluate review feedback",
         "script": PROJECT_ROOT / "src" / "evaluate_review_feedback.py",
     },
@@ -101,6 +105,9 @@ def print_output_summary() -> None:
         PROJECT_ROOT / "outputs" / "batch_review_results.csv",
         PROJECT_ROOT / "outputs" / "batch_review_summary.json",
         PROJECT_ROOT / "outputs" / "batch_review_report.md",
+        PROJECT_ROOT / "outputs" / "spec_compliance_results.csv",
+        PROJECT_ROOT / "outputs" / "spec_compliance_summary.json",
+        PROJECT_ROOT / "outputs" / "spec_compliance_report.md",
         PROJECT_ROOT / "outputs" / "review_feedback_cases.csv",
         PROJECT_ROOT / "outputs" / "review_feedback_summary.json",
         PROJECT_ROOT / "outputs" / "review_feedback_report.md",
