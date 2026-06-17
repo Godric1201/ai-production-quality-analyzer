@@ -263,13 +263,17 @@ h1 {
 
 .case-trace-header {
   display: grid;
-  grid-template-columns: 1.1fr repeat(4, 1fr);
+  grid-template-columns: minmax(140px, 1.1fr) repeat(4, minmax(120px, 1fr));
   gap: 12px;
   margin-bottom: 14px;
   padding: 16px;
   border: 1px solid rgba(56, 189, 248, 0.28);
   border-radius: 18px;
   background: rgba(56, 189, 248, 0.07);
+}
+
+.case-trace-header div {
+  min-width: 0;
 }
 
 .case-trace-header span {
@@ -286,7 +290,8 @@ h1 {
   display: block;
   font-size: 0.98rem;
   line-height: 1.25;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .case-trace-grid {
@@ -314,6 +319,7 @@ h1 {
 }
 
 .trace-metric-list div {
+  min-width: 0;
   padding: 9px 10px;
   border: 1px solid rgba(148, 163, 184, 0.14);
   border-radius: 12px;
@@ -335,6 +341,35 @@ h1 {
   color: var(--text);
   font-size: 0.9rem;
   line-height: 1.38;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  word-break: normal;
+}
+
+.trace-metric-list .trace-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  white-space: normal;
+}
+
+.trace-metric-list .trace-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  margin-bottom: 0;
+  padding: 4px 8px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  text-transform: none;
 }
 
 .case-trace-summary {
@@ -345,6 +380,7 @@ h1 {
   background: rgba(52, 211, 153, 0.07);
   color: var(--muted);
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .dashboard-grid {

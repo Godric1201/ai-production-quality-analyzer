@@ -62,15 +62,83 @@ function formatValue(value, fallback = "Not generated yet") {
   return String(value);
 }
 
+function formatEnumLabel(value, fallback = "Not generated yet") {
+  if (value === null || value === undefined || value === "") {
+    return fallback;
+  }
+
+  const labels = {
+    ENGINEERING_REVIEW_REQUIRED: "Review Required",
+    ADDITIONAL_MONITORING: "Additional Monitoring",
+    STANDARD_MONITORING: "Standard Monitoring",
+    TRUE_POSITIVE_REVIEW: "Confirmed Issue",
+    FALSE_ALARM_REVIEW: "False Alarm",
+    MISSED_ISSUE: "Missed Issue",
+    TRUE_NEGATIVE_MONITORING: "Correct Monitoring",
+    CRITICAL_VIOLATION: "Critical Violation",
+    WARNING_VIOLATION: "Warning Violation",
+    COMPLIANT: "Compliant",
+    confirmed_issue: "Confirmed Issue",
+    false_alarm: "False Alarm",
+    no_issue: "No Issue",
+    missed_issue: "Missed Issue",
+    needs_follow_up: "Needs Follow-up",
+  };
+  const text = String(value);
+
+  return (
+    labels[text] ||
+    text
+      .replace(/[_-]+/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+  );
+}
+
 function splitListText(value) {
   if (!value) {
     return [];
   }
 
   return String(value)
-    .split(";")
+    .split(/[;,]/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function formatLimitedList(value, limit = 3, moreLabel = "more") {
+  const items = splitListText(value);
+  if (items.length === 0) {
+    return "None";
+  }
+
+  const visibleItems = items.slice(0, limit);
+  const remainingCount = items.length - visibleItems.length;
+
+  if (remainingCount > 0) {
+    visibleItems.push(`+${remainingCount} ${moreLabel}`);
+  }
+
+  return visibleItems.join("\n");
+}
+
+function formatFirstListItem(value, moreLabel = "more") {
+  const items = splitListText(value);
+  if (items.length === 0) {
+    return "None";
+  }
+
+  const remainingCount = items.length - 1;
+  return remainingCount > 0 ? `${items[0]}\n+${remainingCount} ${moreLabel}` : items[0];
+}
+
+function truncateTraceText(value, maxLength) {
+  const text = formatValue(value, "").trim();
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
 }
 
 function createBarChart(canvasId, labels, values, label, color) {
@@ -303,7 +371,17 @@ function renderTraceList(containerId, items) {
     const value = document.createElement("strong");
 
     label.textContent = item.label;
-    value.textContent = item.value;
+    if (item.chips && item.chips.length > 0) {
+      value.className = "trace-chip-list";
+      item.chips.forEach((chipLabel) => {
+        const chip = document.createElement("span");
+        chip.className = "trace-chip";
+        chip.textContent = chipLabel;
+        value.appendChild(chip);
+      });
+    } else {
+      value.textContent = item.value;
+    }
     row.appendChild(label);
     row.appendChild(value);
     container.appendChild(row);
@@ -349,11 +427,15 @@ function renderCaseTrace(caseTrace = {}) {
     "traceRisk",
     `${formatValue(safeGet(modelReview, ["risk_level"], "Unknown"))} · ${probabilityText}`
   );
-  setText("traceReviewDecision", formatValue(safeGet(modelReview, ["review_decision"])));
-  setText("traceSpecStatus", formatValue(safeGet(spec, ["spec_compliance_status"])));
+  setText(
+    "traceRisk",
+    `${formatEnumLabel(safeGet(modelReview, ["risk_level"], "Unknown"))} \u00b7 ${probabilityText}`
+  );
+  setText("traceReviewDecision", formatEnumLabel(safeGet(modelReview, ["review_decision"])));
+  setText("traceSpecStatus", formatEnumLabel(safeGet(spec, ["spec_compliance_status"])));
   setText(
     "traceFeedbackClassification",
-    formatValue(safeGet(feedback, ["feedback_classification"]))
+    formatEnumLabel(safeGet(feedback, ["feedback_classification"]))
   );
 
   renderTraceList("traceInputConditions", [
@@ -376,37 +458,34 @@ function renderCaseTrace(caseTrace = {}) {
 
   renderTraceList("traceModelRca", [
     { label: "Scrap probability", value: probabilityText },
-    { label: "Risk level", value: formatValue(safeGet(modelReview, ["risk_level"])) },
+    { label: "Risk level", value: formatEnumLabel(safeGet(modelReview, ["risk_level"])) },
     {
       label: "Root cause summary",
       value: formatValue(safeGet(rca, ["root_cause_summary"])),
     },
     {
       label: "Top drivers",
-      value: splitListText(safeGet(rca, ["top_suspected_drivers"], ""))
-        .slice(0, 3)
-        .join("; ") || "Not generated yet",
+      chips: splitListText(safeGet(rca, ["top_suspected_drivers"], "")).slice(0, 3),
+      value: "Not generated yet",
     },
   ]);
 
   renderTraceList("traceSpecCompliance", [
     {
       label: "Status",
-      value: formatValue(safeGet(spec, ["spec_compliance_status"])),
+      value: formatEnumLabel(safeGet(spec, ["spec_compliance_status"])),
     },
     {
       label: "Violated requirements",
-      value: splitListText(safeGet(spec, ["violated_requirement_ids"], ""))
-        .slice(0, 4)
-        .join("; ") || "None",
+      value: formatLimitedList(safeGet(spec, ["violated_requirement_ids"], ""), 3, "more"),
     },
     {
       label: "Violation summary",
-      value: truncateText(formatValue(safeGet(spec, ["violation_summary"], "None")), 160),
+      value: truncateTraceText(safeGet(spec, ["violation_summary"], "None"), 180),
     },
     {
       label: "Recommended actions",
-      value: truncateText(formatValue(safeGet(spec, ["recommended_actions"], "None")), 160),
+      value: formatFirstListItem(safeGet(spec, ["recommended_actions"], ""), "more actions"),
     },
   ]);
 
@@ -417,11 +496,11 @@ function renderCaseTrace(caseTrace = {}) {
     },
     {
       label: "Engineer outcome",
-      value: formatValue(safeGet(feedback, ["engineer_review_outcome"])),
+      value: formatEnumLabel(safeGet(feedback, ["engineer_review_outcome"])),
     },
     {
       label: "Classification",
-      value: formatValue(safeGet(feedback, ["feedback_classification"])),
+      value: formatEnumLabel(safeGet(feedback, ["feedback_classification"])),
     },
     {
       label: "Interpretation",
@@ -429,7 +508,7 @@ function renderCaseTrace(caseTrace = {}) {
     },
   ]);
 
-  setText("traceSummary", formatValue(caseTrace.trace_summary));
+  setText("traceSummary", truncateTraceText(caseTrace.trace_summary, 260));
 }
 
 function renderRecommendations(recommendations) {
