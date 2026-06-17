@@ -1,0 +1,11 @@
+part_id,machine_id,temperature_c,pressure_bar,cycle_time_s,shift,material_batch,operator_experience_years,vibration_mm_s,humidity_percent
+NB000001,M2,196.2,6.55,54.1,night,B4,1.2,3.35,62.0
+NB000002,M1,184.0,5.75,45.5,early,B1,6.5,2.05,47.0
+NB000003,M4,190.8,5.95,50.8,late,B2,3.0,2.85,52.0
+NB000004,M3,172.5,5.35,44.2,early,B5,8.0,2.10,45.5
+NB000005,M2,188.6,6.20,48.7,night,B3,2.4,2.65,58.0
+NB000006,M1,181.2,5.60,43.8,early,B4,5.1,1.95,46.0
+NB000007,M3,187.5,5.90,46.0,night,B1,4.2,2.30,64.5
+NB000008,M4,194.4,6.42,52.4,late,B4,1.8,3.05,59.0
+NB000009,M1,185.1,5.82,46.2,early,B2,7.4,2.20,49.5
+NB000010,M2,191.6,5.05,51.7,late,B5,1.6,2.95,61.0

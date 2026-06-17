@@ -11,7 +11,7 @@ rules:
     severity: "high"
     evidence: "temperature is well above the configured risk threshold"
     engineering_interpretation: "Potential thermal drift, overheating, resin degradation, or process setpoint issue."
-    recommendation: "Audit temperature setpoints, cooling performance, and recent thermal alarms before releasing the batch."
+    recommendation: "Audit temperature setpoints, cooling performance, and recent thermal alarms before further review action."
 
   - id: high_temperature
     column: temperature_c

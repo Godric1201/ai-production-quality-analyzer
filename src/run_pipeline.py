@@ -30,6 +30,10 @@ PIPELINE_STEPS = [
         "script": PROJECT_ROOT / "src" / "optimize_threshold_cost.py",
     },
     {
+        "name": "Review new production batch",
+        "script": PROJECT_ROOT / "src" / "review_batch.py",
+    },
+    {
         "name": "Export dashboard data",
         "script": PROJECT_ROOT / "src" / "export_dashboard_data.py",
     },
@@ -90,6 +94,9 @@ def print_output_summary() -> None:
         PROJECT_ROOT / "outputs" / "selected_threshold.json",
         PROJECT_ROOT / "outputs" / "threshold_cost_analysis.csv",
         PROJECT_ROOT / "outputs" / "cost_optimized_threshold.json",
+        PROJECT_ROOT / "outputs" / "batch_review_results.csv",
+        PROJECT_ROOT / "outputs" / "batch_review_summary.json",
+        PROJECT_ROOT / "outputs" / "batch_review_report.md",
         PROJECT_ROOT / "outputs" / "prediction_results.csv",
         PROJECT_ROOT / "dashboard" / "dashboard_data.json",
         PROJECT_ROOT / "outputs" / "quality_report.md",
